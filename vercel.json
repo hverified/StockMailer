@@ -1,7 +1,9 @@
 {
-  "functions": {
-    "runDailyScraper.js": {
-      "schedule": "18 20 * * *"
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/runDailyTask",
+      "schedule": "25 20 * * *"
     }
-  }
+  ]
 }
