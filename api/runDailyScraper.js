@@ -1,6 +1,6 @@
-const ChartinkScraper = require('../services/scraper.service');
-const EmailService = require('../services/email.service');
-const logger = require('../utils/logger');
+const ChartinkScraper = require('../src/services/scraper.service');
+const EmailService = require('../src/services/email.service');
+const logger = require('../src/utils/logger');
 
 const scraper = new ChartinkScraper();
 const emailService = new EmailService();
