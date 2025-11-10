@@ -1,10 +1,7 @@
 {
-  "cron": {
-    "jobs": [
-      {
-        "path": "/runDailyScraper",
-        "schedule": "15 20 * * *"
-      }
-    ]
+  "functions": {
+    "runDailyScraper.js": {
+      "schedule": "18 20 * * *"
+    }
   }
 }
