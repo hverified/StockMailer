@@ -47,12 +47,12 @@ async function runDailyTask() {
 }
 
 // Setup scheduler
-cron.schedule(config.scheduler.cronTime, async () => {
-  logger.info('⏰ Running scheduled daily stock report task...');
-  await runDailyTask();
-}, {
-  timezone: config.scheduler.timezone
-});
+// cron.schedule(config.scheduler.cronTime, async () => {
+//   logger.info('⏰ Running scheduled daily stock report task...');
+//   await runDailyTask();
+// }, {
+//   timezone: config.scheduler.timezone
+// });
 
 logger.info(`📅 Scheduler configured: ${config.scheduler.cronTime} (${config.scheduler.timezone})`);
 
