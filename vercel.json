@@ -3,7 +3,7 @@
   "crons": [
     {
       "path": "/api/runDailyScraper",
-      "schedule": "11 2 * * *"
+      "schedule": "45 20 * * *"
     }
   ]
 }
