@@ -14,13 +14,13 @@ class EmailService {
     });
   }
 
-  async sendStockReport(stocks) {
+  async sendStockReport(stocks, niftyData) {
     try {
       const mailOptions = {
         from: config.email.user,
         to: config.email.recipient,
-        subject: `Daily Stock Report - ${new Date().toLocaleDateString('en-IN')}`,
-        html: generateEmailHTML(stocks)
+        subject: `Daily Stock Report - ${new Date().toLocaleDateString('en-IN')} ${niftyData.isAboveEMA ? '✅' : '⚠️'}`,
+        html: generateEmailHTML(stocks, niftyData)
       };
 
       const info = await this.transporter.sendMail(mailOptions);
@@ -40,18 +40,27 @@ class EmailService {
           symbol: 'RELIANCE',
           close: 2450.50,
           per_chg: 2.5,
-          volume: 5000000
+          volume: 5000000,
+          dayHigh: 2475.80
         },
         {
           stock_name: 'Tata Consultancy Services Ltd',
           symbol: 'TCS',
           close: 3650.75,
           per_chg: -1.2,
-          volume: 2000000
+          volume: 2000000,
+          dayHigh: 3685.50
         }
       ];
 
-      return await this.sendStockReport(testStocks);
+      const testNiftyData = {
+        currentPrice: 19850.25,
+        ema20: 19500.00,
+        isAboveEMA: true,
+        timestamp: new Date().toISOString()
+      };
+
+      return await this.sendStockReport(testStocks, testNiftyData);
     } catch (error) {
       logger.error(`Error sending test email: ${error.message}`);
       throw error;

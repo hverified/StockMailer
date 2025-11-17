@@ -6,6 +6,7 @@ const helpers = require('./utils/helpers');
 const routes = require('./routes');
 const ChartinkScraper = require('./services/scraper.service');
 const EmailService = require('./services/email.service');
+const YahooFinanceService = require('./services/yahoo.service');
 
 const app = express();
 
@@ -28,17 +29,37 @@ if (!helpers.validateConfig()) {
 // Initialize services
 const scraper = new ChartinkScraper();
 const emailService = new EmailService();
+const yahooFinance = new YahooFinanceService();
 
 // Daily task function
 async function runDailyTask() {
   try {
     logger.info('🚀 Starting daily task...');
     
-    // Scrape stocks
-    const stocks = await scraper.scrapeStocks();
+    // Step 1: Get Nifty 50 data and check if above EMA
+    logger.info('📊 Checking Nifty 50 EMA condition...');
+    const niftyData = await yahooFinance.getNifty50Data();
     
-    // Send email report
-    await emailService.sendStockReport(stocks);
+    let stocks = [];
+    let filteredStocks = [];
+    
+    // Step 2: Scrape stocks from Chartink
+    logger.info('🔍 Scraping stocks from Chartink...');
+    stocks = await scraper.scrapeStocks();
+    
+    // Step 3: Filter stocks based on Nifty 50 EMA condition
+    if (niftyData.isAboveEMA) {
+      logger.info(`✅ Nifty 50 (${niftyData.currentPrice}) is above 20 EMA (${niftyData.ema20}). Including all stocks.`);
+      
+      // Enrich stocks with day high data
+      filteredStocks = await yahooFinance.enrichStocksWithDayHigh(stocks);
+    } else {
+      logger.info(`⚠️ Nifty 50 (${niftyData.currentPrice}) is below 20 EMA (${niftyData.ema20}). Filtering out all stocks.`);
+      filteredStocks = [];
+    }
+    
+    // Step 4: Send email report with Nifty data
+    await emailService.sendStockReport(filteredStocks, niftyData);
     
     logger.info('✅ Daily task completed successfully');
   } catch (error) {
@@ -47,12 +68,12 @@ async function runDailyTask() {
 }
 
 // Setup scheduler
-// cron.schedule(config.scheduler.cronTime, async () => {
-//   logger.info('⏰ Running scheduled daily stock report task...');
-//   await runDailyTask();
-// }, {
-//   timezone: config.scheduler.timezone
-// });
+cron.schedule(config.scheduler.cronTime, async () => {
+  logger.info('⏰ Running scheduled daily stock report task...');
+  await runDailyTask();
+}, {
+  timezone: config.scheduler.timezone
+});
 
 logger.info(`📅 Scheduler configured: ${config.scheduler.cronTime} (${config.scheduler.timezone})`);
 
