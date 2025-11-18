@@ -1,40 +1,19 @@
-const express = require('express');
-const cron = require('node-cron');
-const config = require('./config');
-const logger = require('./utils/logger');
-const helpers = require('./utils/helpers');
-const routes = require('./routes');
-const ChartinkScraper = require('./services/scraper.service');
-const EmailService = require('./services/email.service');
-const YahooFinanceService = require('./services/yahoo.service');
+// api/cron.js or pages/api/cron.js
+// This is the endpoint that Vercel cron will call
 
-const app = express();
-
-// Middleware
-app.use(express.json());
-app.use((req, res, next) => {
-  logger.debug(`${req.method} ${req.path}`);
-  next();
-});
-
-// Routes
-app.use('/', routes);
-
-// Validate configuration
-if (!helpers.validateConfig()) {
-  logger.error('Configuration validation failed. Exiting...');
-  process.exit(1);
-}
+const ChartinkScraper = require('../src/services/scraper.service');
+const EmailService = require('../src/services/email.service');
+const YahooFinanceService = require('../src/services/yahoo.service');
+const logger = require('../src/utils/logger');
 
 // Initialize services
 const scraper = new ChartinkScraper();
 const emailService = new EmailService();
 const yahooFinance = new YahooFinanceService();
 
-// Daily task function
 async function runDailyTask() {
   try {
-    logger.info('🚀 Starting daily task...');
+    logger.info('🚀 Starting daily task from Vercel cron...');
     
     // Step 1: Get Nifty 50 data and check if above EMA
     logger.info('📊 Checking Nifty 50 EMA condition...');
@@ -62,22 +41,38 @@ async function runDailyTask() {
     await emailService.sendStockReport(filteredStocks, niftyData);
     
     logger.info('✅ Daily task completed successfully');
+    
+    return {
+      success: true,
+      niftyData,
+      stocksScraped: stocks.length,
+      stocksIncluded: filteredStocks.length
+    };
   } catch (error) {
     logger.error(`❌ Daily task failed: ${error.message}`);
     logger.error(error.stack);
+    throw error;
   }
 }
 
-// Setup scheduler
-cron.schedule(config.scheduler.cronTime, async () => {
-  logger.info('⏰ Running scheduled daily stock report task...');
-  await runDailyTask();
-}, {
-  timezone: config.scheduler.timezone
-});
-
-logger.info(`📅 Scheduler configured: ${config.scheduler.cronTime} (${config.scheduler.timezone})`);
-
-// Export the runDailyTask function for Vercel cron
-module.exports = app;
-module.exports.runDailyTask = runDailyTask;
+module.exports = async (req, res) => {
+  // Verify the request is from Vercel Cron (optional but recommended)
+  const authHeader = req.headers['authorization'];
+  const cronSecret = process.env.CRON_SECRET;
+  
+  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    logger.warn('Unauthorized cron request attempt');
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  try {
+    const result = await runDailyTask();
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+};
