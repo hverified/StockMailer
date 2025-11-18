@@ -21,7 +21,6 @@ app.use((req, res, next) => {
 
 // Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, {
-  customCss: '.swagger-ui .topbar { display: none }',
   customSiteTitle: 'Stock Mailer API Documentation',
   swaggerOptions: {
     persistAuthorization: true,
