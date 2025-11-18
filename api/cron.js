@@ -1,6 +1,84 @@
 // api/cron.js
 // Vercel serverless function for cron job
 
+/**
+ * @swagger
+ * /api/cron:
+ *   get:
+ *     summary: Scheduled cron job endpoint
+ *     description: This endpoint is called by Vercel Cron to run the daily stock report task. It checks Nifty 50 EMA, scrapes stocks, and sends email report.
+ *     tags: [Reports]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Cron job executed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                 niftyData:
+ *                   type: object
+ *                   properties:
+ *                     currentPrice:
+ *                       type: number
+ *                       example: 19850.25
+ *                     ema20:
+ *                       type: number
+ *                       example: 19500.00
+ *                     isAboveEMA:
+ *                       type: boolean
+ *                       example: true
+ *                 stocksScraped:
+ *                   type: integer
+ *                   example: 25
+ *                 stocksIncluded:
+ *                   type: integer
+ *                   example: 25
+ *       401:
+ *         description: Unauthorized - Invalid or missing CRON_SECRET
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Unauthorized
+ *       405:
+ *         description: Method not allowed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Method not allowed
+ *       500:
+ *         description: Error executing cron job
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ */
+
 const ChartinkScraper = require('../src/services/scraper.service');
 const EmailService = require('../src/services/email.service');
 const YahooFinanceService = require('../src/services/yahoo.service');

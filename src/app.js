@@ -1,9 +1,11 @@
 const express = require('express');
 const cron = require('node-cron');
+const swaggerUi = require('swagger-ui-express');
 const config = require('./config');
 const logger = require('./utils/logger');
 const helpers = require('./utils/helpers');
 const routes = require('./routes');
+const swaggerSpecs = require('./config/swagger');
 const ChartinkScraper = require('./services/scraper.service');
 const EmailService = require('./services/email.service');
 const YahooFinanceService = require('./services/yahoo.service');
@@ -16,6 +18,18 @@ app.use((req, res, next) => {
   logger.debug(`${req.method} ${req.path}`);
   next();
 });
+
+// Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Stock Mailer API Documentation',
+  swaggerOptions: {
+    persistAuthorization: true,
+    displayRequestDuration: true,
+    filter: true,
+    tryItOutEnabled: true
+  }
+}));
 
 // Routes
 app.use('/', routes);
@@ -77,6 +91,7 @@ cron.schedule(config.scheduler.cronTime, async () => {
 });
 
 logger.info(`📅 Scheduler configured: ${config.scheduler.cronTime} (${config.scheduler.timezone})`);
+logger.info(`📚 API Documentation available at: /api-docs`);
 
 // Export the runDailyTask function for Vercel cron
 module.exports = app;

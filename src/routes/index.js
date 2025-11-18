@@ -10,7 +10,34 @@ const scraper = new ChartinkScraper();
 const emailService = new EmailService();
 const yahooFinance = new YahooFinanceService();
 
-// Health check
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     summary: Health check endpoint
+ *     description: Check if the API is running and get system status
+ *     tags: [Health]
+ *     responses:
+ *       200:
+ *         description: API is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: healthy
+ *                 timestamp:
+ *                   type: string
+ *                   example: "18/11/2025, 5:00:00 PM"
+ *                 scheduler:
+ *                   type: string
+ *                   example: active
+ *                 nextRun:
+ *                   type: string
+ *                   example: "5:00 PM daily"
+ */
 router.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
@@ -20,21 +47,49 @@ router.get('/health', (req, res) => {
   });
 });
 
-// Debug yahoo-finance2 exports
-router.get('/debug-yahoo', (req, res) => {
-  const yf = require('yahoo-finance2');
-  res.json({
-    type: typeof yf,
-    keys: Object.keys(yf),
-    hasQuote: typeof yf.quote,
-    hasQuoteSummary: typeof yf.quoteSummary,
-    hasHistorical: typeof yf.historical,
-    hasDefault: typeof yf.default,
-    defaultKeys: yf.default ? Object.keys(yf.default) : null
-  });
-});
-
-// Manual trigger for scraping and email with Nifty 50 check
+/**
+ * @swagger
+ * /trigger-report:
+ *   post:
+ *     summary: Manually trigger stock report generation
+ *     description: Scrapes stocks from Chartink, checks Nifty 50 EMA condition, enriches with day high data, and sends email report
+ *     tags: [Reports]
+ *     responses:
+ *       200:
+ *         description: Report generated and sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Report generated and sent successfully
+ *                 niftyAboveEMA:
+ *                   type: boolean
+ *                   example: true
+ *                 niftyPrice:
+ *                   type: number
+ *                   example: 19850.25
+ *                 ema20:
+ *                   type: number
+ *                   example: 19500.00
+ *                 stocksScraped:
+ *                   type: integer
+ *                   example: 25
+ *                 stocksIncluded:
+ *                   type: integer
+ *                   example: 25
+ *       500:
+ *         description: Error generating report
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post('/trigger-report', async (req, res) => {
   try {
     logger.info('Manual trigger: Starting stock report generation...');
@@ -69,7 +124,38 @@ router.post('/trigger-report', async (req, res) => {
   }
 });
 
-// Test scraping only
+/**
+ * @swagger
+ * /test-scrape:
+ *   get:
+ *     summary: Test stock scraping from Chartink
+ *     description: Scrapes stocks from Chartink without sending email
+ *     tags: [Testing]
+ *     responses:
+ *       200:
+ *         description: Successfully scraped stocks
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 count:
+ *                   type: integer
+ *                   example: 25
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Stock'
+ *       500:
+ *         description: Error scraping stocks
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.get('/test-scrape', async (req, res) => {
   try {
     const stocks = await scraper.scrapeStocks();
@@ -79,7 +165,36 @@ router.get('/test-scrape', async (req, res) => {
   }
 });
 
-// Test Nifty 50 EMA check
+/**
+ * @swagger
+ * /test-nifty:
+ *   get:
+ *     summary: Test Nifty 50 EMA calculation
+ *     description: Fetches current Nifty 50 price and calculates 20-day EMA
+ *     tags: [Testing]
+ *     responses:
+ *       200:
+ *         description: Successfully fetched Nifty 50 data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/NiftyData'
+ *                 message:
+ *                   type: string
+ *                   example: Nifty is above 20 EMA
+ *       500:
+ *         description: Error fetching Nifty data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.get('/test-nifty', async (req, res) => {
   try {
     const niftyData = await yahooFinance.getNifty50Data();
@@ -93,7 +208,34 @@ router.get('/test-nifty', async (req, res) => {
   }
 });
 
-// Test email with dummy data
+/**
+ * @swagger
+ * /test-email:
+ *   post:
+ *     summary: Send test email
+ *     description: Sends a test email with dummy stock data
+ *     tags: [Testing]
+ *     responses:
+ *       200:
+ *         description: Test email sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Test email sent successfully
+ *       500:
+ *         description: Error sending email
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post('/test-email', async (req, res) => {
   try {
     await emailService.sendTestEmail();
@@ -103,7 +245,41 @@ router.post('/test-email', async (req, res) => {
   }
 });
 
-// Get stock quote (Yahoo Finance)
+/**
+ * @swagger
+ * /quote/{symbol}:
+ *   get:
+ *     summary: Get stock quote from Yahoo Finance
+ *     description: Fetches real-time stock quote data including price, change, volume, and market cap
+ *     tags: [Stock Data]
+ *     parameters:
+ *       - in: path
+ *         name: symbol
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Stock symbol (NSE)
+ *         example: RELIANCE
+ *     responses:
+ *       200:
+ *         description: Successfully fetched stock quote
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/StockQuote'
+ *       500:
+ *         description: Error fetching quote
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.get('/quote/:symbol', async (req, res) => {
   try {
     const quote = await yahooFinance.getStockQuote(req.params.symbol);
