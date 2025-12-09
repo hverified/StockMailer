@@ -143,6 +143,69 @@ class YahooFinanceService {
     logger.info('Stock enrichment completed');
     return enrichedStocks;
   }
+
+  async enrichStocksWithDayAndPrevHighs(stocks) {
+    logger.info(`Enriching ${stocks.length} stocks with current and previous day high data...`);
+    
+    // Process stocks in batches to avoid rate limiting
+    const batchSize = 5;
+    const enrichedStocks = [];
+    
+    for (let i = 0; i < stocks.length; i += batchSize) {
+      const batch = stocks.slice(i, i + batchSize);
+      
+      const batchResults = await Promise.all(
+        batch.map(async (stock) => {
+          try {
+            // Get current quote for today's high
+            const quote = await this.getStockQuote(stock.symbol);
+            
+            // Get last 3 days of historical data to ensure we have previous trading day
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 5); // Get 5 days to ensure we have at least 2 trading days
+            
+            const historicalData = await this.getHistoricalData(
+              stock.symbol,
+              startDate,
+              endDate
+            );
+            
+            let prevDayHigh = null;
+            
+            if (historicalData && historicalData.length >= 2) {
+              // Sort by date descending and get the second most recent day (previous trading day)
+              const sortedData = historicalData.sort((a, b) => new Date(b.date) - new Date(a.date));
+              prevDayHigh = sortedData[1]?.high || null;
+            }
+            
+            return {
+              ...stock,
+              todayHigh: quote ? quote.dayHigh : null,
+              prevDayHigh: prevDayHigh
+            };
+          } catch (error) {
+            logger.error(`Error enriching ${stock.symbol} with day/prev highs: ${error.message}`);
+            return {
+              ...stock,
+              todayHigh: null,
+              prevDayHigh: null
+            };
+          }
+        })
+      );
+      
+      enrichedStocks.push(...batchResults);
+      
+      // Add a small delay between batches
+      if (i + batchSize < stocks.length) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+    
+    logger.info('Stock enrichment with day/prev highs completed');
+    return enrichedStocks;
+  }
 }
 
 module.exports = YahooFinanceService;

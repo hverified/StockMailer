@@ -2,6 +2,7 @@ const nodemailer = require('nodemailer');
 const config = require('../config');
 const logger = require('../utils/logger');
 const { generateEmailHTML } = require('../templates/email.template');
+const { generateMorningEmailHTML } = require('../templates/morning-email.template');
 
 class EmailService {
   constructor() {
@@ -28,6 +29,24 @@ class EmailService {
       return { success: true, messageId: info.messageId };
     } catch (error) {
       logger.error(`Error sending email: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async sendMorningStockReport(stocks, niftyData) {
+    try {
+      const mailOptions = {
+        from: config.email.user,
+        to: config.email.recipient,
+        subject: `🌅 Morning Pre-Market Report - ${new Date().toLocaleDateString('en-IN')} ${niftyData.isAboveEMA ? '✅' : '⚠️'}`,
+        html: generateMorningEmailHTML(stocks, niftyData)
+      };
+
+      const info = await this.transporter.sendMail(mailOptions);
+      logger.info(`Morning email sent successfully - Message ID: ${info.messageId}`);
+      return { success: true, messageId: info.messageId };
+    } catch (error) {
+      logger.error(`Error sending morning email: ${error.message}`);
       throw error;
     }
   }
@@ -63,6 +82,43 @@ class EmailService {
       return await this.sendStockReport(testStocks, testNiftyData);
     } catch (error) {
       logger.error(`Error sending test email: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async sendTestMorningEmail() {
+    try {
+      const testStocks = [
+        {
+          stock_name: 'Reliance Industries Ltd',
+          symbol: 'RELIANCE',
+          close: 2450.50,
+          per_chg: 2.5,
+          volume: 5000000,
+          todayHigh: 2475.80,
+          prevDayHigh: 2460.00
+        },
+        {
+          stock_name: 'Tata Consultancy Services Ltd',
+          symbol: 'TCS',
+          close: 3650.75,
+          per_chg: -1.2,
+          volume: 2000000,
+          todayHigh: 3685.50,
+          prevDayHigh: 3700.25
+        }
+      ];
+
+      const testNiftyData = {
+        currentPrice: 19850.25,
+        ema20: 19500.00,
+        isAboveEMA: true,
+        timestamp: new Date().toISOString()
+      };
+
+      return await this.sendMorningStockReport(testStocks, testNiftyData);
+    } catch (error) {
+      logger.error(`Error sending test morning email: ${error.message}`);
       throw error;
     }
   }

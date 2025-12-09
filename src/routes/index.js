@@ -43,7 +43,8 @@ router.get('/health', (req, res) => {
     status: 'healthy',
     timestamp: helpers.currentDateTime(),
     scheduler: 'active',
-    nextRun: '5:00 PM daily'
+    morningReport: '9:29 AM (Mon-Fri)',
+    eveningReport: '5:00 PM (Mon-Fri)'
   });
 });
 
@@ -120,6 +121,50 @@ router.post('/trigger-report', async (req, res) => {
     });
   } catch (error) {
     logger.error(`Manual trigger failed: ${error.message}`);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * @swagger
+ * /trigger-morning-report:
+ *   post:
+ *     summary: Manually trigger morning pre-market report
+ *     description: Scrapes stocks, fetches current and previous day highs, and sends morning email report
+ *     tags: [Reports]
+ *     responses:
+ *       200:
+ *         description: Morning report generated and sent successfully
+ *       500:
+ *         description: Error generating morning report
+ */
+router.post('/trigger-morning-report', async (req, res) => {
+  try {
+    logger.info('Manual trigger: Starting morning report generation...');
+    
+    // Check Nifty 50 condition
+    const niftyData = await yahooFinance.getNifty50Data();
+    
+    // Scrape stocks
+    const stocks = await scraper.scrapeStocks();
+    
+    // Enrich stocks with current and previous day highs
+    const enrichedStocks = await yahooFinance.enrichStocksWithDayAndPrevHighs(stocks);
+    
+    // Send morning email
+    await emailService.sendMorningStockReport(enrichedStocks, niftyData);
+    
+    res.json({ 
+      success: true, 
+      message: 'Morning report generated and sent successfully',
+      niftyAboveEMA: niftyData.isAboveEMA,
+      niftyPrice: niftyData.currentPrice,
+      ema20: niftyData.ema20,
+      stocksScraped: stocks.length,
+      stocksProcessed: enrichedStocks.length
+    });
+  } catch (error) {
+    logger.error(`Manual morning trigger failed: ${error.message}`);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -240,6 +285,28 @@ router.post('/test-email', async (req, res) => {
   try {
     await emailService.sendTestEmail();
     res.json({ success: true, message: 'Test email sent successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * @swagger
+ * /test-morning-email:
+ *   post:
+ *     summary: Send test morning email
+ *     description: Sends a test morning pre-market email with dummy stock data
+ *     tags: [Testing]
+ *     responses:
+ *       200:
+ *         description: Test morning email sent successfully
+ *       500:
+ *         description: Error sending morning email
+ */
+router.post('/test-morning-email', async (req, res) => {
+  try {
+    await emailService.sendTestMorningEmail();
+    res.json({ success: true, message: 'Test morning email sent successfully' });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
