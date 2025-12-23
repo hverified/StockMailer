@@ -1,87 +1,10 @@
 // api/cron.js
-// Vercel serverless function for cron job
-
-/**
- * @swagger
- * /api/cron:
- *   get:
- *     summary: Scheduled cron job endpoint
- *     description: This endpoint is called by Vercel Cron to run the daily stock report task. It checks Nifty 50 EMA, scrapes stocks, and sends email report.
- *     tags: [Reports]
- *     security:
- *       - BearerAuth: []
- *     responses:
- *       200:
- *         description: Cron job executed successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 timestamp:
- *                   type: string
- *                   format: date-time
- *                 niftyData:
- *                   type: object
- *                   properties:
- *                     currentPrice:
- *                       type: number
- *                       example: 19850.25
- *                     ema20:
- *                       type: number
- *                       example: 19500.00
- *                     isAboveEMA:
- *                       type: boolean
- *                       example: true
- *                 stocksScraped:
- *                   type: integer
- *                   example: 25
- *                 stocksIncluded:
- *                   type: integer
- *                   example: 25
- *       401:
- *         description: Unauthorized - Invalid or missing CRON_SECRET
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: Unauthorized
- *       405:
- *         description: Method not allowed
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: Method not allowed
- *       500:
- *         description: Error executing cron job
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 error:
- *                   type: string
- *                 timestamp:
- *                   type: string
- *                   format: date-time
- */
+// Vercel serverless function for evening cron job
 
 const ChartinkScraper = require('../src/services/scraper.service');
 const EmailService = require('../src/services/email.service');
 const YahooFinanceService = require('../src/services/yahoo.service');
+const StorageService = require('../src/services/storage.service');
 const logger = require('../src/utils/logger');
 
 module.exports = async (req, res) => {
@@ -100,12 +23,13 @@ module.exports = async (req, res) => {
   }
 
   try {
-    logger.info('🚀 Starting Vercel cron job...');
+    logger.info('🚀 Starting Vercel evening cron job...');
     
     // Initialize services
     const scraper = new ChartinkScraper();
     const emailService = new EmailService();
     const yahooFinance = new YahooFinanceService();
+    const storage = new StorageService();
     
     // Step 1: Get Nifty 50 data and check if above EMA
     logger.info('📊 Checking Nifty 50 EMA condition...');
@@ -127,10 +51,20 @@ module.exports = async (req, res) => {
       filteredStocks = [];
     }
     
-    // Step 4: Send email report with Nifty data
-    await emailService.sendStockReport(filteredStocks, niftyData);
+    // Step 4: Save stocks to file (even if empty, for morning report)
+    await storage.saveStocks(filteredStocks, niftyData);
+    console.log("Saved Stocks \n\n", filteredStocks.length);
     
-    logger.info('✅ Vercel cron job completed successfully');
+    
+    // Step 5: Send email ONLY if stocks found
+    if (filteredStocks.length > 0) {
+      await emailService.sendStockReport(filteredStocks, niftyData);
+      logger.info(`✅ Evening report sent with ${filteredStocks.length} stocks`);
+    } else {
+      logger.info('⏭️ No stocks found - skipping email');
+    }
+    
+    logger.info('✅ Vercel evening cron job completed successfully');
     
     return res.status(200).json({
       success: true,
@@ -141,10 +75,11 @@ module.exports = async (req, res) => {
         isAboveEMA: niftyData.isAboveEMA
       },
       stocksScraped: stocks.length,
-      stocksIncluded: filteredStocks.length
+      stocksIncluded: filteredStocks.length,
+      emailSent: filteredStocks.length > 0
     });
   } catch (error) {
-    logger.error(`❌ Vercel cron job failed: ${error.message}`);
+    logger.error(`❌ Vercel evening cron job failed: ${error.message}`);
     logger.error(error.stack);
     
     return res.status(500).json({ 
