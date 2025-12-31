@@ -1,9 +1,58 @@
 // api/morning-cron.js
 // Vercel serverless function for morning pre-market cron job
 
+/**
+ * @swagger
+ * /api/morning-cron:
+ *   get:
+ *     summary: Morning pre-market cron job endpoint
+ *     description: This endpoint is called by Vercel Cron at 9:29 AM IST to run the morning stock report. It scrapes stocks, fetches current and previous day highs, and sends email report.
+ *     tags: [Reports]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Morning cron job executed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                 niftyData:
+ *                   type: object
+ *                   properties:
+ *                     currentPrice:
+ *                       type: number
+ *                       example: 19850.25
+ *                     ema20:
+ *                       type: number
+ *                       example: 19500.00
+ *                     isAboveEMA:
+ *                       type: boolean
+ *                       example: true
+ *                 stocksScraped:
+ *                   type: integer
+ *                   example: 25
+ *                 stocksProcessed:
+ *                   type: integer
+ *                   example: 25
+ *       401:
+ *         description: Unauthorized - Invalid or missing CRON_SECRET
+ *       405:
+ *         description: Method not allowed
+ *       500:
+ *         description: Error executing morning cron job
+ */
+
+const ChartinkScraper = require('../src/services/scraper.service');
 const EmailService = require('../src/services/email.service');
 const YahooFinanceService = require('../src/services/yahoo.service');
-const StorageService = require('../src/services/storage.service');
 const logger = require('../src/utils/logger');
 
 module.exports = async (req, res) => {
@@ -25,41 +74,24 @@ module.exports = async (req, res) => {
     logger.info('🌅 Starting morning pre-market cron job...');
     
     // Initialize services
+    const scraper = new ChartinkScraper();
     const emailService = new EmailService();
     const yahooFinance = new YahooFinanceService();
-    const storage = new StorageService();
     
-    // Step 1: Load stocks from saved file
-    logger.info('📂 Loading stocks from saved file...');
-    const savedData = await storage.loadStocks();
+    // Step 1: Get Nifty 50 data and check if above EMA
+    logger.info('📊 Checking Nifty 50 EMA condition...');
+    const niftyData = await yahooFinance.getNifty50Data();
     
-    if (!savedData || !savedData.stocks || savedData.stocks.length === 0) {
-      logger.info('⏭️ No stocks found in saved file - skipping morning report');
-      return res.status(200).json({
-        success: true,
-        timestamp: new Date().toISOString(),
-        message: 'No stocks found - morning report skipped',
-        stocksProcessed: 0,
-        emailSent: false
-      });
-    }
+    // Step 2: Scrape stocks from Chartink
+    logger.info('🔍 Scraping stocks from Chartink...');
+    const stocks = await scraper.scrapeStocks();
     
-    const stocks = savedData.stocks;
-    const niftyData = savedData.niftyData;
-    
-    logger.info(`Found ${stocks.length} stocks from previous evening`);
-    
-    // Step 2: Enrich stocks with current and previous day high data
+    // Step 3: Enrich stocks with current and previous day high data
     logger.info('💰 Enriching stocks with high data...');
     const enrichedStocks = await yahooFinance.enrichStocksWithDayAndPrevHighs(stocks);
     
-    // Step 3: Send morning email ONLY if stocks exist
-    if (enrichedStocks.length > 0) {
-      await emailService.sendMorningStockReport(enrichedStocks, niftyData);
-      logger.info(`✅ Morning report sent with ${enrichedStocks.length} stocks`);
-    } else {
-      logger.info('⏭️ No stocks to process - skipping email');
-    }
+    // Step 4: Send morning email report
+    await emailService.sendMorningStockReport(enrichedStocks, niftyData);
     
     logger.info('✅ Morning cron job completed successfully');
     
@@ -71,8 +103,8 @@ module.exports = async (req, res) => {
         ema20: niftyData.ema20,
         isAboveEMA: niftyData.isAboveEMA
       },
-      stocksProcessed: enrichedStocks.length,
-      emailSent: enrichedStocks.length > 0
+      stocksScraped: stocks.length,
+      stocksProcessed: enrichedStocks.length
     });
   } catch (error) {
     logger.error(`❌ Morning cron job failed: ${error.message}`);

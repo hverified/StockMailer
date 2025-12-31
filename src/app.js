@@ -9,7 +9,6 @@ const swaggerSpecs = require('./config/swagger');
 const ChartinkScraper = require('./services/scraper.service');
 const EmailService = require('./services/email.service');
 const YahooFinanceService = require('./services/yahoo.service');
-const StorageService = require('./services/storage.service');
 
 const app = express();
 
@@ -44,12 +43,11 @@ if (!helpers.validateConfig()) {
 const scraper = new ChartinkScraper();
 const emailService = new EmailService();
 const yahooFinance = new YahooFinanceService();
-const storage = new StorageService();
 
-// Evening task function
-async function runEveningTask() {
+// Daily task function
+async function runDailyTask() {
   try {
-    logger.info('🚀 Starting evening task...');
+    logger.info('🚀 Starting daily task...');
     
     // Step 1: Get Nifty 50 data and check if above EMA
     logger.info('📊 Checking Nifty 50 EMA condition...');
@@ -73,84 +71,27 @@ async function runEveningTask() {
       filteredStocks = [];
     }
     
-    // Step 4: Save stocks to file
-    await storage.saveStocks(filteredStocks, niftyData);
+    // Step 4: Send email report with Nifty data
+    await emailService.sendStockReport(filteredStocks, niftyData);
     
-    // Step 5: Send email ONLY if stocks found
-    if (filteredStocks.length > 0) {
-      await emailService.sendStockReport(filteredStocks, niftyData);
-      logger.info(`✅ Evening report sent with ${filteredStocks.length} stocks`);
-    } else {
-      logger.info('⏭️ No stocks found - skipping email');
-    }
-    
-    logger.info('✅ Evening task completed successfully');
+    logger.info('✅ Daily task completed successfully');
   } catch (error) {
-    logger.error(`❌ Evening task failed: ${error.message}`);
+    logger.error(`❌ Daily task failed: ${error.message}`);
     logger.error(error.stack);
   }
 }
 
-// Morning task function
-async function runMorningTask() {
-  try {
-    logger.info('🌅 Starting morning task...');
-    
-    // Load stocks from saved file
-    logger.info('📂 Loading stocks from saved file...');
-    const savedData = await storage.loadStocks();
-    
-    if (!savedData || !savedData.stocks || savedData.stocks.length === 0) {
-      logger.info('⏭️ No stocks found in saved file - skipping morning report');
-      return;
-    }
-    
-    const stocks = savedData.stocks;
-    const niftyData = savedData.niftyData;
-    
-    logger.info(`Found ${stocks.length} stocks from previous evening`);
-    
-    // Enrich stocks with current and previous day highs
-    logger.info('💰 Enriching stocks with high data...');
-    const enrichedStocks = await yahooFinance.enrichStocksWithDayAndPrevHighs(stocks);
-    
-    // Send morning email ONLY if stocks exist
-    if (enrichedStocks.length > 0) {
-      await emailService.sendMorningStockReport(enrichedStocks, niftyData);
-      logger.info(`✅ Morning report sent with ${enrichedStocks.length} stocks`);
-    } else {
-      logger.info('⏭️ No stocks to process - skipping email');
-    }
-    
-    logger.info('✅ Morning task completed successfully');
-  } catch (error) {
-    logger.error(`❌ Morning task failed: ${error.message}`);
-    logger.error(error.stack);
-  }
-}
-
-// Setup schedulers
-// Evening report: 5:00 PM IST (Mon-Fri)
+// Setup scheduler
 cron.schedule(config.scheduler.cronTime, async () => {
-  logger.info('⏰ Running scheduled evening stock report task...');
-  await runEveningTask();
+  logger.info('⏰ Running scheduled daily stock report task...');
+  await runDailyTask();
 }, {
   timezone: config.scheduler.timezone
 });
 
-// Morning report: 9:29 AM IST (Mon-Fri)
-cron.schedule('29 9 * * 1-5', async () => {
-  logger.info('⏰ Running scheduled morning stock report task...');
-  await runMorningTask();
-}, {
-  timezone: config.scheduler.timezone
-});
-
-logger.info(`📅 Evening scheduler: ${config.scheduler.cronTime} (${config.scheduler.timezone})`);
-logger.info(`📅 Morning scheduler: 9:29 AM (${config.scheduler.timezone})`);
+logger.info(`📅 Scheduler configured: ${config.scheduler.cronTime} (${config.scheduler.timezone})`);
 logger.info(`📚 API Documentation available at: /api-docs`);
 
-// Export functions for Vercel cron
+// Export the runDailyTask function for Vercel cron
 module.exports = app;
-module.exports.runEveningTask = runEveningTask;
-module.exports.runMorningTask = runMorningTask;
+module.exports.runDailyTask = runDailyTask;
