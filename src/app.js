@@ -10,8 +10,10 @@ const ChartinkScraper = require('./services/scraper.service');
 const EmailService = require('./services/email.service');
 const YahooFinanceService = require('./services/yahoo.service');
 const MarketDataService = require('./services/market.service');
+const homepageRoutes = require('./routes/homepage.routes');
 
 const app = express();
+
 
 // Middleware
 app.use(express.json());
@@ -19,6 +21,7 @@ app.use((req, res, next) => {
   logger.debug(`${req.method} ${req.path}`);
   next();
 });
+
 
 // Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, {
@@ -31,7 +34,9 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, {
   }
 }));
 
+
 // Routes
+app.use('/', homepageRoutes);
 app.use('/', routes);
 
 // Validate configuration
