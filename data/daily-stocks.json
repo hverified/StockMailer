@@ -1,0 +1,48 @@
+{
+  "stocks": [
+    {
+      "id": "1766511661225-xjjmk352e",
+      "stock_name": "Grasim Industries Limited",
+      "symbol": "GRASIM",
+      "bsecode": "500300",
+      "per_chg": 0.72,
+      "close": 2829.8,
+      "volume": 399009,
+      "status": "shortlisted",
+      "shortlisted_date": "2025-12-23",
+      "dayHigh": 2842.7
+    },
+    {
+      "id": "1766511661226-t0fa79kcc",
+      "stock_name": "Voltas Limited",
+      "symbol": "VOLTAS",
+      "bsecode": "500575",
+      "per_chg": -0.17,
+      "close": 1385.6,
+      "volume": 232195,
+      "status": "shortlisted",
+      "shortlisted_date": "2025-12-23",
+      "dayHigh": 1391.9
+    },
+    {
+      "id": "1766511661226-mmnbhs1pq",
+      "stock_name": "Nbcc (india) Limited",
+      "symbol": "NBCC",
+      "bsecode": "534309",
+      "per_chg": -0.08,
+      "close": 116.27,
+      "volume": 6440370,
+      "status": "shortlisted",
+      "shortlisted_date": "2025-12-23",
+      "dayHigh": 117.2
+    }
+  ],
+  "niftyData": {
+    "currentPrice": 26177.15,
+    "ema20": 26018.96,
+    "isAboveEMA": true,
+    "timestamp": "2025-12-23T17:41:00.853Z"
+  },
+  "timestamp": "2025-12-23T17:41:01.369Z",
+  "date": "2025-12-23"
+}

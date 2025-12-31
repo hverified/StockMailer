@@ -1,14 +1,18 @@
 const express = require('express');
 const ChartinkScraper = require('../services/scraper.service');
 const EmailService = require('../services/email.service');
-const YahooFinanceService = require('../services/yahoo.service');
+const MarketDataService = require('../services/market.service');
+// const YahooFinanceService = require('../services/yahoo.service');
+// const NSEService = require('../services/nse.service');
 const helpers = require('../utils/helpers');
 const logger = require('../utils/logger');
 
 const router = express.Router();
 const scraper = new ChartinkScraper();
 const emailService = new EmailService();
-const yahooFinance = new YahooFinanceService();
+const nseService = new MarketDataService();
+// const nseService = new NSEService();
+// const yahooFinance = new YahooFinanceService();
 
 /**
  * @swagger
@@ -96,7 +100,7 @@ router.post('/trigger-report', async (req, res) => {
     logger.info('Manual trigger: Starting stock report generation...');
     
     // Check Nifty 50 condition
-    const niftyData = await yahooFinance.getNifty50Data();
+    const niftyData = await nseService.getNifty50Data();
     
     // Scrape stocks
     const stocks = await scraper.scrapeStocks();
@@ -104,7 +108,7 @@ router.post('/trigger-report', async (req, res) => {
     // Filter stocks based on Nifty 50 EMA
     let filteredStocks = [];
     if (niftyData.isAboveEMA) {
-      filteredStocks = await yahooFinance.enrichStocksWithDayHigh(stocks);
+      filteredStocks = await nseService.enrichStocksWithDayHigh(stocks);
     }
     
     // Send email
@@ -143,13 +147,13 @@ router.post('/trigger-morning-report', async (req, res) => {
     logger.info('Manual trigger: Starting morning report generation...');
     
     // Check Nifty 50 condition
-    const niftyData = await yahooFinance.getNifty50Data();
+    const niftyData = await nseService.getNifty50Data();
     
     // Scrape stocks
     const stocks = await scraper.scrapeStocks();
     
     // Enrich stocks with current and previous day highs
-    const enrichedStocks = await yahooFinance.enrichStocksWithDayAndPrevHighs(stocks);
+    const enrichedStocks = await nseService.enrichStocksWithDayAndPrevHighs(stocks);
     
     // Send morning email
     await emailService.sendMorningStockReport(enrichedStocks, niftyData);
@@ -242,7 +246,7 @@ router.get('/test-scrape', async (req, res) => {
  */
 router.get('/test-nifty', async (req, res) => {
   try {
-    const niftyData = await yahooFinance.getNifty50Data();
+    const niftyData = await nseService.getNifty50Data();
     res.json({ 
       success: true, 
       data: niftyData,
@@ -349,7 +353,7 @@ router.post('/test-morning-email', async (req, res) => {
  */
 router.get('/quote/:symbol', async (req, res) => {
   try {
-    const quote = await yahooFinance.getStockQuote(req.params.symbol);
+    const quote = await nseService.getStockQuote(req.params.symbol);
     res.json({ success: true, data: quote });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
