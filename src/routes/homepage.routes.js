@@ -16,7 +16,7 @@ router.get('/', (req, res) => {
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Stock Mailer Dashboard</title>
+<title>Tradewise</title>
 
 <style>
 :root {
@@ -25,6 +25,8 @@ router.get('/', (req, res) => {
   --text:#111827;
   --muted:#6b7280;
   --accent:#4f46e5;
+  --active:#eef2ff;
+  --border:#e5e7eb;
 }
 
 body {
@@ -37,41 +39,64 @@ body {
 .container {
   max-width:1200px;
   margin:auto;
-  padding:32px;
+  padding:36px 32px;
 }
 
-h1 {
-  color:var(--accent);
-  margin-bottom:4px;
+/* -------- Header -------- */
+.header {
+  display:flex;
+  flex-direction:column;
+  gap:4px;
 }
 
+.header h1 {
+  font-size:26px;
+  font-weight:600;
+  letter-spacing:-0.3px;
+}
+
+.header .date {
+  font-size:14px;
+  color:var(--muted);
+}
+
+/* -------- Actions -------- */
 .actions {
   display:flex;
   gap:12px;
   flex-wrap:wrap;
-  margin:24px 0;
+  margin:28px 0;
 }
 
 button,a {
-  padding:12px 18px;
-  border-radius:14px;
+  padding:11px 18px;
+  border-radius:999px; /* pill */
   font-weight:600;
-  border:none;
+  font-size:14px;
+  border:1px solid var(--border);
   cursor:pointer;
   text-decoration:none;
-}
-
-.primary {
-  background:linear-gradient(135deg,#4f46e5,#7c3aed);
-  color:white;
-}
-
-.secondary {
-  background:transparent;
+  background:white;
   color:var(--text);
-  border:1px solid #c7c8c8;
 }
 
+button.secondary.active {
+  background:var(--active);
+  border-color:var(--accent);
+  color:var(--accent);
+}
+
+/* Docs link (secondary, not primary CTA) */
+a.docs {
+  background:#f8fafc;
+  color:#475569;
+}
+
+a.docs:hover {
+  background:#f1f5f9;
+}
+
+/* -------- Layout -------- */
 .grid {
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
@@ -83,11 +108,11 @@ button,a {
   border-radius:16px;
   padding:18px;
   box-shadow:0 12px 30px rgba(0,0,0,.12);
-  animation:fadeUp .3s ease forwards;
+  animation:fadeUp .25s ease forwards;
 }
 
 @keyframes fadeUp {
-  from {opacity:0; transform:translateY(8px);}
+  from {opacity:0; transform:translateY(6px);}
   to {opacity:1; transform:none;}
 }
 
@@ -110,10 +135,9 @@ button,a {
   gap:14px;
 }
 
-/* Inline count strip */
 .count-strip {
   background:#f8fafc;
-  border:1px solid #e2e8f0;
+  border:1px solid var(--border);
   border-radius:12px;
   padding:10px 14px;
   font-size:14px;
@@ -125,19 +149,56 @@ button,a {
 
 <body>
 <div class="container">
-  <h1>📈 Stock Mailer Dashboard</h1>
-  <p style="color:var(--muted)">System • Market • Scanner</p>
 
+  <!-- Header -->
+  <div class="header">
+    <h1 id="greeting"></h1>
+    <div class="date" id="dateLine"></div>
+  </div>
+
+  <!-- Actions -->
   <div class="actions">
-    <a class="primary" href="/api-docs">📘 Documentation</a>
-    <button class="secondary" onclick="loadHealth()">❤️ Health</button>
-    <button class="secondary" onclick="loadMarketScan()">🔍 Market Scan</button>
+    <a class="docs" href="/api-docs">📘 Documentation</a>
+    <button id="healthBtn" class="secondary" onclick="loadHealth()">❤️ Health</button>
+    <button id="scanBtn" class="secondary" onclick="loadMarketScan()">🔍 Market Scan</button>
   </div>
 
   <div id="content" class="grid"></div>
 </div>
 
 <script>
+/* -------------------------
+   Greeting + Date
+------------------------- */
+function setGreeting() {
+  const hour = new Date().getHours();
+  let greeting = 'Welcome back';
+
+  if (hour >= 5 && hour < 12) greeting = 'Good morning';
+  else if (hour >= 12 && hour < 17) greeting = 'Good afternoon';
+  else if (hour >= 17 && hour < 23) greeting = 'Good evening';
+
+  document.getElementById('greeting').innerText =
+    greeting + ', Khalid';
+
+  document.getElementById('dateLine').innerText =
+    new Date().toLocaleDateString('en-IN', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+}
+
+/* -------------------------
+   Helpers
+------------------------- */
+function setActive(btnId){
+  document.querySelectorAll('button.secondary')
+    .forEach(b => b.classList.remove('active'));
+  document.getElementById(btnId).classList.add('active');
+}
+
 function showLoader(count=3){
   const c = document.getElementById('content');
   c.innerHTML = '';
@@ -158,11 +219,11 @@ function add(html){
    HEALTH
 ========================= */
 async function loadHealth(){
+  setActive('healthBtn');
   showLoader(1);
   await sleep(300);
 
-  const res = await fetch('/health');
-  const d = await res.json();
+  const d = await (await fetch('/health')).json();
   document.getElementById('content').innerHTML = '';
 
   const isUp = d.status === 'UP';
@@ -200,21 +261,18 @@ async function loadHealth(){
 }
 
 /* =========================
-   MARKET SCAN (NIFTY + STOCKS)
+   MARKET SCAN (DEFAULT)
 ========================= */
 async function loadMarketScan(){
+  setActive('scanBtn');
   showLoader(4);
   await sleep(350);
 
-  const niftyRes = await fetch('/nifty-status');
-  const scanRes = await fetch('/test-scrape');
-
-  const nifty = await niftyRes.json();
-  const scanData = await scanRes.json();
+  const nifty = await (await fetch('/nifty-status')).json();
+  const scanData = await (await fetch('/test-scrape')).json();
 
   document.getElementById('content').innerHTML = '';
 
-  /* ---- NIFTY CARD ---- */
   const isUp = nifty.aboveEMA;
   const bg = isUp
     ? 'linear-gradient(135deg,#f0fdf4,#dcfce7)'
@@ -248,7 +306,6 @@ async function loadMarketScan(){
     </div>
   \`);
 
-  /* ---- INLINE COUNT ---- */
   const count = scanData.count || 0;
   add(\`
     <div class="count-strip">
@@ -256,26 +313,19 @@ async function loadMarketScan(){
     </div>
   \`);
 
-  /* ---- STOCK LIST ---- */
-  const stocks = scanData.stocks || [];
-
-  const cards = stocks.map(s => {
+  const cards = (scanData.stocks || []).map(s => {
     const chg = parseFloat(s.per_chg) || 0;
     const up = chg >= 0;
-
     return \`
       <div class="card" style="border:1px dashed #c7c8c8;">
         <div style="font-weight:600;">\${s.stock_name || 'N/A'}</div>
         <div style="color:#6366f1;font-size:12px;">\${s.symbol || ''}</div>
-
         <div style="font-size:20px;font-weight:700;margin-top:6px;">
           ₹\${Number(s.close || 0).toFixed(2)}
         </div>
-
         <div style="font-size:13px;font-weight:700;color:\${up ? '#16a34a' : '#dc2626'};">
           \${up ? '⬆' : '⬇'} \${up ? '+' : ''}\${chg.toFixed(2)}%
         </div>
-
         <div style="font-size:13px;margin-top:6px;">
           Volume: \${s.volume ? Number(s.volume).toLocaleString('en-IN') : '—'}
         </div>
@@ -285,6 +335,14 @@ async function loadMarketScan(){
 
   add('<div class="stock-grid">' + cards + '</div>');
 }
+
+/* -------------------------
+   DEFAULT LOAD
+------------------------- */
+window.addEventListener('load', () => {
+  setGreeting();
+  loadMarketScan();
+});
 </script>
 </body>
 </html>`);
@@ -293,7 +351,6 @@ async function loadMarketScan(){
 /* =========================
    APIs
 ========================= */
-
 router.get('/health', (req, res) => {
   res.json({
     status: 'UP',
