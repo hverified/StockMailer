@@ -364,7 +364,7 @@ async function loadHistory(){
   showLoader(2);
   await sleep(300);
 
-  const data = await (await fetch('/api/scan-history')).json();
+  const data = await (await fetch('/scan-history')).json();
   document.getElementById('content').innerHTML = '';
 
   if (!data.success || data.dates.length === 0) {
@@ -413,7 +413,7 @@ async function loadHistoryDetail(date) {
   showLoader(3);
   await sleep(200);
 
-  const data = await (await fetch(\`/api/scan-history/\${date}\`)).json();
+  const data = await (await fetch(\`/scan-history/\${date}\`)).json();
   document.getElementById('content').innerHTML = '';
 
   if (!data.success) {
@@ -494,7 +494,7 @@ async function runManualScan() {
   btn.innerText = '⏳ Running...';
 
   try {
-    const response = await fetch('/api/manual-scan', { method: 'POST' });
+    const response = await fetch('/manual-scan', { method: 'POST' });
     const data = await response.json();
     
     if (data.success) {
@@ -548,7 +548,7 @@ router.get('/nifty-status', async (req, res) => {
   });
 });
 
-router.get('/api/scan-history', async (req, res) => {
+router.get('/scan-history', async (req, res) => {
   try {
     const dates = await stockDBService.getAllScanDates(30);
     res.json({ success: true, dates });
@@ -558,7 +558,7 @@ router.get('/api/scan-history', async (req, res) => {
   }
 });
 
-router.get('/api/scan-history/:date', async (req, res) => {
+router.get('/scan-history/:date', async (req, res) => {
   try {
     const stocks = await stockDBService.getStocksByDate(req.params.date);
     const niftyData = stocks.length > 0 ? stocks[0].niftyData : null;
@@ -575,7 +575,7 @@ router.get('/api/scan-history/:date', async (req, res) => {
   }
 });
 
-router.post('/api/manual-scan', async (req, res) => {
+router.post('/manual-scan', async (req, res) => {
   try {
     logger.info('Manual scan triggered from UI');
     
