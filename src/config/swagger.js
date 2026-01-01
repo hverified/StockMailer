@@ -7,7 +7,7 @@ const options = {
     info: {
       title: 'Stock Mailer API',
       version: '1.0.0',
-      description: 'Automated stock screening and email reporting system that integrates with Chartink and Yahoo Finance',
+      description: 'Automated stock screening and email reporting system that integrates with Chartink and NSE',
       contact: {
         name: 'API Support',
         email: 'hverified@gmail.com'

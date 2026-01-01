@@ -1,120 +1,283 @@
 # Stock Mailer API Documentation
 
-## 📚 Swagger UI Access
+## 📚 Overview
 
-Once your server is running, access the interactive API documentation at:
+Automated stock screening and email reporting system that integrates with Chartink and NSE India. Features include:
 
-**Local Development:**
-```
-http://localhost:3000/api-docs
-```
+- Daily automated stock scanning
+- Email reports with Nifty 50 analysis
+- Historical scan data tracking
+- Real-time Nifty 50 EMA calculation
+- Web dashboard for monitoring
 
-**Production (Vercel):**
-```
-https://your-app.vercel.app/api-docs
-```
+## 🚀 Quick Start
 
-## 🚀 Installation
+### Prerequisites
 
-Install the required Swagger dependencies:
+- Node.js 18+
+- MongoDB Atlas account (or local MongoDB)
+- Gmail account for sending emails
+
+### Installation
 
 ```bash
-npm install swagger-jsdoc swagger-ui-express --save
+# Install dependencies
+npm install
+
+# Copy environment file
+cp .env.example .env
+
+# Update .env with your credentials
+# - MongoDB URI
+# - Email credentials
+# - Chartink scan details
 ```
 
-## 📖 API Endpoints Overview
+### Initial Setup
 
-### Health Check
-- **GET** `/health` - Check API health status
+1. **Seed Nifty 50 Historical Data**
+
+```bash
+npm run seed:nifty
+```
+
+This will populate the last 20 days of Nifty 50 data needed for EMA calculation.
+
+2. **Start the Server**
+
+```bash
+# Development
+npm run dev
+
+# Production
+npm start
+```
+
+3. **Access Dashboard**
+
+Open http://localhost:3000
+
+## 📖 Features
+
+### 1. Market Scan
+- Real-time stock screening from Chartink
+- Nifty 50 condition checking
+- Day high enrichment from NSE
+
+### 2. History Tracking
+- View all historical scans
+- Date-wise stock listings
+- Nifty 50 data for each scan
+- Click any date to see details
+
+### 3. Manual Scanning
+- Run scans on-demand from dashboard
+- Automatic database storage
+- Duplicate prevention (by date + symbol)
+
+### 4. Automated Reports
+- Daily email reports at 5:00 PM IST
+- Morning pre-market reports at 9:29 AM IST
+- Nifty 50 analysis included
+
+## 🗄️ Database Structure
+
+### Collections
+
+#### `stocks`
+```javascript
+{
+  _id: ObjectId,
+  id: String,
+  stock_name: String,
+  symbol: String,
+  bsecode: String,
+  per_chg: Number,
+  close: Number,
+  volume: Number,
+  dayHigh: Number,
+  status: String,
+  scannedDate: String, // YYYY-MM-DD
+  timestamp: Date,
+  niftyData: {
+    currentPrice: Number,
+    ema20: Number,
+    isAboveEMA: Boolean
+  }
+}
+```
+
+**Indexes:**
+- `{ symbol: 1, scannedDate: 1 }` - Unique
+- `{ scannedDate: -1 }` - For date queries
+
+#### `nifty50`
+```javascript
+{
+  _id: ObjectId,
+  date: String, // YYYY-MM-DD
+  price: Number,
+  timestamp: Date
+}
+```
+
+**Indexes:**
+- `{ date: 1 }` - Unique
+- `{ date: -1 }` - For latest price
+
+## 📡 API Endpoints
+
+### Health & Status
+- `GET /health` - System health check
+- `GET /nifty-status` - Current Nifty 50 status
+
+### Scanning
+- `GET /test-scrape` - Test Chartink scraper
+- `POST /api/manual-scan` - Manual scan trigger
+- `POST /trigger-report` - Generate and email report
+
+### History
+- `GET /api/scan-history` - Get all scan dates
+- `GET /api/scan-history/:date` - Get stocks for date
 
 ### Reports
-- **POST** `/trigger-report` - Manually trigger stock report generation
-- **GET** `/api/cron` - Scheduled cron endpoint (called by Vercel)
+- `GET /api/cron` - Automated evening report (Vercel)
+- `GET /api/morning-cron` - Morning pre-market report
 
 ### Testing
-- **GET** `/test-scrape` - Test Chartink scraping
-- **GET** `/test-nifty` - Test Nifty 50 EMA calculation
-- **POST** `/test-email` - Send test email
+- `POST /test-email` - Send test email
+- `GET /test-nifty` - Test Nifty 50 fetch
 
-### Stock Data
-- **GET** `/quote/{symbol}` - Get real-time stock quote
+Full API documentation: http://localhost:3000/api-docs
 
-## 🔧 Features
+## 🔧 Configuration
 
-- **Interactive API Testing**: Try out endpoints directly from the browser
-- **Request/Response Examples**: See sample data for each endpoint
-- **Schema Definitions**: Detailed models for all data structures
-- **Authentication Support**: Bearer token authentication for cron endpoint
-- **Filtering & Search**: Quick search through endpoints
-- **Request Duration**: See how long each request takes
+### Environment Variables
 
-## 📝 Swagger Annotations
+```bash
+# Email
+EMAIL_SERVICE=gmail
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASSWORD=your-app-password
+RECIPIENT_EMAIL=recipient@example.com
 
-All endpoints are documented using JSDoc annotations in the route files:
+# Chartink
+CHARTINK_URL=https://chartink.com/screener/your-screener
+CHARTINK_SCAN_CLAUSE=your-scan-clause
 
-```javascript
-/**
- * @swagger
- * /endpoint:
- *   get:
- *     summary: Brief description
- *     description: Detailed description
- *     tags: [Category]
- *     responses:
- *       200:
- *         description: Success response
- */
+# MongoDB
+MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/
+MONGODB_DB_NAME=stockmailer
+
+# Scheduler
+CRON_TIME=0 17 * * *
+TIMEZONE=Asia/Kolkata
+
+# Security
+CRON_SECRET=your-secret
 ```
 
-## 🎨 Customization
+## 📊 Nifty 50 EMA Calculation
 
-The Swagger UI is configured with:
-- Hidden top bar for cleaner look
-- Persistent authorization
-- Request duration display
-- Filter/search enabled
-- Try it out enabled by default
+The system calculates 20-day EMA using historical data stored in MongoDB:
 
-## 🔐 Security
+1. **Data Collection:** Saves Nifty 50 price daily
+2. **EMA Formula:** `EMA = (Price - PrevEMA) × Multiplier + PrevEMA`
+3. **Multiplier:** `2 / (Period + 1) = 2 / 21 = 0.0952`
 
-For the cron endpoint, you can add authentication:
+### Seeding Initial Data
 
-1. Set `CRON_SECRET` environment variable in Vercel
-2. Add `Bearer {your-secret}` to Authorization header in Swagger UI
-3. Click "Authorize" button in Swagger UI to set the token
+Update `scripts/seed-nifty.js` with actual Nifty 50 closing prices, then:
 
-## 📦 File Structure
-
-```
-project/
-├── src/
-│   ├── config/
-│   │   └── swagger.js          # Swagger configuration
-│   ├── routes/
-│   │   └── index.js            # Routes with @swagger annotations
-│   └── app.js                  # Express app with Swagger UI setup
-└── api/
-    └── cron.js                 # Vercel cron endpoint
+```bash
+npm run seed:nifty
 ```
 
 ## 🌐 Deployment
 
-The Swagger documentation automatically deploys with your app to Vercel. No additional configuration needed!
+### Vercel
 
-## 💡 Usage Tips
+1. Connect your GitHub repo to Vercel
+2. Add environment variables in Vercel dashboard
+3. Deploy
 
-1. **Try It Out**: Click "Try it out" on any endpoint to test it
-2. **View Schema**: Click on schema names to see detailed structure
-3. **Copy Requests**: Use the "Copy" button to get cURL commands
-4. **Expand All**: Click "Expand Operations" to see all endpoints at once
-5. **Filter**: Use the search box to quickly find endpoints
+The cron jobs are configured in `vercel.json`:
+- Evening report: 5:00 PM IST (11:30 UTC)
+- Morning report: 9:29 AM IST (3:59 UTC)
 
-## 🎯 Next Steps
+### MongoDB Atlas
 
-- Add more detailed examples
-- Include authentication flows
-- Add rate limiting documentation
-- Document error codes
-- Add API versioning
+1. Create cluster at mongodb.com
+2. Add IP whitelist (0.0.0.0/0 for serverless)
+3. Create database user
+4. Copy connection string to `MONGODB_URI`
+
+## 🔐 Security
+
+- Email passwords use app-specific passwords
+- Cron endpoints protected with `CRON_SECRET`
+- MongoDB uses connection string authentication
+- No sensitive data in logs
+
+## 🧹 Maintenance
+
+### Clean Old Data
+
+```javascript
+// Delete scans older than 90 days
+await stockDBService.deleteOldScans(90);
+
+// Delete Nifty data older than 1 year
+await niftyDBService.deleteOldData(365);
+```
+
+### Database Indexes
+
+Indexes are created automatically on first connection. To recreate:
+
+```javascript
+await mongodb.createIndexes();
+```
+
+## 📝 Notes
+
+- **Duplicate Prevention:** Stocks are unique by `symbol + scannedDate`
+- **EMA Requirement:** Minimum 20 days of Nifty data needed
+- **Rate Limiting:** NSE requests have 1-1.5s delays
+- **Vercel Limits:** 10s timeout for serverless functions
+
+## 🐛 Troubleshooting
+
+### MongoDB Connection Issues
+```bash
+# Check connection string format
+# Ensure IP whitelist includes your IP
+# Verify database user has read/write permissions
+```
+
+### EMA Calculation Returns Null
+```bash
+# Run seed script to populate initial data
+npm run seed:nifty
+
+# Verify data exists
+# Check MongoDB logs
+```
+
+### Cron Not Running
+```bash
+# Verify CRON_SECRET matches in Vercel
+# Check Vercel function logs
+# Ensure vercel.json has correct schedule
+```
+
+## 📧 Support
+
+For issues or questions:
+- Email: hverified@gmail.com
+- Check logs: `logs/` directory
+- MongoDB logs: Atlas dashboard
 
 ---
+
+© 2025 Khalid Siddiqui • Built with Node.js, MongoDB, Express

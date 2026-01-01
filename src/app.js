@@ -1,3 +1,4 @@
+// src/app.js
 const express = require('express');
 const path = require('path');
 const cron = require('node-cron');
@@ -7,13 +8,14 @@ const logger = require('./utils/logger');
 const helpers = require('./utils/helpers');
 const routes = require('./routes');
 const swaggerSpecs = require('./config/swagger');
+const mongodb = require('./config/mongodb');
 const ChartinkScraper = require('./services/scraper.service');
 const EmailService = require('./services/email.service');
 const MarketDataService = require('./services/market.service');
+const StockDBService = require('./services/stock.db.service');
 const homepageRoutes = require('./routes/homepage.routes');
 
 const app = express();
-
 
 // Middleware
 app.use(express.json());
@@ -34,7 +36,6 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, {
   }
 }));
 
-
 // Routes
 app.use('/', homepageRoutes);
 app.use('/', routes);
@@ -45,39 +46,53 @@ if (!helpers.validateConfig()) {
   process.exit(1);
 }
 
+// Initialize MongoDB connection
+(async () => {
+  try {
+    await mongodb.connect();
+    logger.info('✅ MongoDB connection established');
+  } catch (error) {
+    logger.error('Failed to connect to MongoDB:', error);
+    logger.warn('⚠️ App will continue without database functionality');
+  }
+})();
+
 // Initialize services
 const scraper = new ChartinkScraper();
 const emailService = new EmailService();
 const marketService = new MarketDataService();
+const stockDBService = new StockDBService();
 
 // Daily task function
 async function runDailyTask() {
   try {
     logger.info('🚀 Starting daily task...');
     
-    // Step 1: Get Nifty 50 data and check if above EMA
-    logger.info('📊 Checking Nifty 50 EMA condition...');
     const niftyData = await marketService.getNifty50Data();
     
     let stocks = [];
     let filteredStocks = [];
     
-    // Step 2: Scrape stocks from Chartink
     logger.info('🔍 Scraping stocks from Chartink...');
     stocks = await scraper.scrapeStocks();
     
-    // Step 3: Filter stocks based on Nifty 50 EMA condition
     if (niftyData.isAboveEMA) {
       logger.info(`✅ Nifty 50 (${niftyData.currentPrice}) is above 20 EMA (${niftyData.ema20}). Including all stocks.`);
-      
-      // Enrich stocks with day high data
       filteredStocks = await marketService.enrichStocksWithDayHigh(stocks);
     } else {
       logger.info(`⚠️ Nifty 50 (${niftyData.currentPrice}) is below 20 EMA (${niftyData.ema20}). Filtering out all stocks.`);
       filteredStocks = [];
     }
     
-    // Step 4: Send email report with Nifty data
+    // Save to database
+    try {
+      logger.info('💾 Saving scan results to database...');
+      await stockDBService.saveStocks(filteredStocks, niftyData);
+    } catch (dbError) {
+      logger.error(`Database save failed: ${dbError.message}`);
+      // Continue even if database save fails
+    }
+    
     await emailService.sendStockReport(filteredStocks, niftyData);
     
     logger.info('✅ Daily task completed successfully');
@@ -98,6 +113,12 @@ cron.schedule(config.scheduler.cronTime, async () => {
 logger.info(`📅 Scheduler configured: ${config.scheduler.cronTime} (${config.scheduler.timezone})`);
 logger.info(`📚 API Documentation available at: /api-docs`);
 
-// Export the runDailyTask function for Vercel cron
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  logger.info('SIGTERM received, closing MongoDB connection...');
+  await mongodb.disconnect();
+  process.exit(0);
+});
+
 module.exports = app;
 module.exports.runDailyTask = runDailyTask;

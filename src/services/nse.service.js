@@ -1,3 +1,4 @@
+// src/services/nse.service.js
 const axios = require('axios');
 const logger = require('../utils/logger');
 
@@ -21,7 +22,6 @@ class NSEService {
 
   async initSession() {
     try {
-      // Visit NSE homepage to get cookies
       const response = await axios.get('https://www.nseindia.com', {
         headers: this.headers,
         timeout: 10000
@@ -30,7 +30,7 @@ class NSEService {
       const setCookieHeader = response.headers['set-cookie'];
       if (setCookieHeader) {
         this.cookies = setCookieHeader.map(cookie => cookie.split(';')[0]).join('; ');
-        logger.debug('NSE session initialized with cookies');
+        logger.debug('NSE session initialized');
       }
     } catch (error) {
       logger.error(`Error initializing NSE session: ${error.message}`);
@@ -80,9 +80,6 @@ class NSEService {
         await this.delay(1000);
       }
 
-      logger.info('Fetching Nifty 50 data from NSE...');
-
-      // Get current Nifty 50 price
       const url = `${this.baseUrl}/allIndices`;
       const response = await axios.get(url, {
         headers: {
@@ -98,37 +95,14 @@ class NSEService {
         throw new Error('Nifty 50 data not found');
       }
 
-      const currentPrice = niftyData.last;
-
-      logger.info('Fetching Nifty 50 historical data for EMA...');
-      
-      // For EMA calculation, we'll use a simplified approach
-      // You can enhance this by fetching historical data from NSE or use cached data
-      const ema20 = await this.calculateNiftyEMA(currentPrice);
-
-      logger.info(`Nifty 50: Current=${currentPrice}, EMA20=${ema20}`);
-
       return {
-        currentPrice: currentPrice,
-        ema20: ema20,
-        isAboveEMA: currentPrice > ema20,
+        currentPrice: niftyData.last,
         timestamp: new Date().toISOString()
       };
     } catch (error) {
-      logger.error(`Error fetching Nifty 50 data from NSE: ${error.message}`);
+      logger.error(`Error fetching Nifty 50 from NSE: ${error.message}`);
       throw error;
     }
-  }
-
-  async calculateNiftyEMA(currentPrice) {
-    // Since NSE doesn't provide easy historical data access,
-    // Option 1: Use a fixed percentage (e.g., 98% of current price as conservative EMA)
-    // This is a temporary solution
-    const estimatedEMA = currentPrice * 0.98;
-    
-    logger.warn('Using estimated EMA calculation. Consider implementing proper historical data fetch.');
-    
-    return parseFloat(estimatedEMA.toFixed(2));
   }
 
   async getHistoricalData(symbol, days = 30) {
