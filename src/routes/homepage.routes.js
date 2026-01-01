@@ -513,7 +513,7 @@ async function runManualScan() {
 
 window.addEventListener('load', () => {
   setGreeting();
-  loadMarketScan();
+  loadHistory();
 });
 </script>
 </body>
