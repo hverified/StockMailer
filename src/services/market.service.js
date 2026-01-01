@@ -1,16 +1,12 @@
 const NSEService = require('./nse.service');
-const YahooFinanceService = require('./yahoo.service');
 const logger = require('../utils/logger');
 
 class MarketDataService {
   constructor() {
     this.nseService = new NSEService();
-    this.yahooService = new YahooFinanceService();
-    this.useNSEPrimary = true; // Set to true to prefer NSE
   }
 
   async getStockQuote(symbol) {
-    if (this.useNSEPrimary) {
       try {
         logger.debug(`Trying NSE for ${symbol}...`);
         const quote = await this.nseService.getStockQuote(symbol);
@@ -18,39 +14,18 @@ class MarketDataService {
       } catch (error) {
         logger.warn(`NSE failed for ${symbol}, trying Yahoo: ${error.message}`);
       }
-    }
-
-    // Fallback to Yahoo
-    try {
-      return await this.yahooService.getStockQuote(symbol);
-    } catch (error) {
-      logger.error(`All sources failed for ${symbol}`);
-      return null;
-    }
   }
 
   async getNifty50Data() {
-    if (this.useNSEPrimary) {
       try {
         logger.info('Fetching Nifty 50 data from NSE...');
         return await this.nseService.getNifty50Data();
       } catch (error) {
         logger.warn(`NSE failed for Nifty 50, trying Yahoo: ${error.message}`);
       }
-    }
-
-    // Fallback to Yahoo
-    try {
-      logger.info('Fetching Nifty 50 data from Yahoo Finance...');
-      return await this.yahooService.getNifty50Data();
-    } catch (error) {
-      logger.error('All sources failed for Nifty 50');
-      throw error;
-    }
   }
 
   async enrichStocksWithDayHigh(stocks) {
-    if (this.useNSEPrimary) {
       logger.info(`Enriching ${stocks.length} stocks with NSE data...`);
       
       const enrichedStocks = [];
@@ -79,17 +54,12 @@ class MarketDataService {
             dayHigh: null
           });
         }
-      }
       
       return enrichedStocks;
     }
-
-    // Fallback to Yahoo
-    return await this.yahooService.enrichStocksWithDayHigh(stocks);
   }
 
   async enrichStocksWithDayAndPrevHighs(stocks) {
-    if (this.useNSEPrimary) {
       logger.info(`Enriching ${stocks.length} stocks with NSE data...`);
       
       const enrichedStocks = [];
@@ -128,10 +98,6 @@ class MarketDataService {
       }
       
       return enrichedStocks;
-    }
-
-    // Fallback to Yahoo
-    return await this.yahooService.enrichStocksWithDayAndPrevHighs(stocks);
   }
 }
 
