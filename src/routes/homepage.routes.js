@@ -17,6 +17,7 @@ router.get('/', (req, res) => {
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Tradewise</title>
+<link rel="icon" type="image/svg+xml" href="/tradewise.svg">
 
 <style>
 :root {

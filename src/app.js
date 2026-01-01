@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const cron = require('node-cron');
 const swaggerUi = require('swagger-ui-express');
 const config = require('./config');
@@ -21,7 +22,7 @@ app.use((req, res, next) => {
   logger.debug(`${req.method} ${req.path}`);
   next();
 });
-
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, {
