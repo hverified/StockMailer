@@ -35,7 +35,7 @@ function generateEmailHTML(stocks, niftyData) {
     <!-- Footer -->
     <div style="background:#1e293b;color:#94a3b8;padding:20px;text-align:center;font-size:12px;line-height:1.5;">
       <p style="margin:0;"><strong>Automated Screening System</strong></p>
-      <p style="margin:6px 0 0;">Chartink • Yahoo Finance • Node.js</p>
+      <p style="margin:6px 0 0;">Chartink • NSE • Node.js</p>
       <div style="margin-top:10px;opacity:0.8;">© ${new Date().getFullYear()} Khalid Siddiqui</div>
     </div>
   </div>

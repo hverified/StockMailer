@@ -12,7 +12,7 @@ class MarketDataService {
         const quote = await this.nseService.getStockQuote(symbol);
         if (quote) return quote;
       } catch (error) {
-        logger.warn(`NSE failed for ${symbol}, trying Yahoo: ${error.message}`);
+        logger.warn(`NSE failed for ${symbol}`);
       }
   }
 
@@ -21,7 +21,7 @@ class MarketDataService {
         logger.info('Fetching Nifty 50 data from NSE...');
         return await this.nseService.getNifty50Data();
       } catch (error) {
-        logger.warn(`NSE failed for Nifty 50, trying Yahoo: ${error.message}`);
+        logger.warn(`NSE failed for Nifty 50, ${error.message}`);
       }
   }
 

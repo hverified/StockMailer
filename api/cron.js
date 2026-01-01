@@ -81,7 +81,7 @@
 
 const ChartinkScraper = require('../src/services/scraper.service');
 const EmailService = require('../src/services/email.service');
-const YahooFinanceService = require('../src/services/yahoo.service');
+const MarketDataService = require('../src/services/market.service');
 const logger = require('../src/utils/logger');
 
 module.exports = async (req, res) => {
@@ -105,11 +105,11 @@ module.exports = async (req, res) => {
     // Initialize services
     const scraper = new ChartinkScraper();
     const emailService = new EmailService();
-    const yahooFinance = new YahooFinanceService();
+    const marketService = new MarketDataService();
     
     // Step 1: Get Nifty 50 data and check if above EMA
     logger.info('📊 Checking Nifty 50 EMA condition...');
-    const niftyData = await yahooFinance.getNifty50Data();
+    const niftyData = await marketService.getNifty50Data();
     
     // Step 2: Scrape stocks from Chartink
     logger.info('🔍 Scraping stocks from Chartink...');
@@ -121,7 +121,7 @@ module.exports = async (req, res) => {
       logger.info(`✅ Nifty 50 (${niftyData.currentPrice}) is above 20 EMA (${niftyData.ema20}). Including all stocks.`);
       
       // Enrich stocks with day high data
-      filteredStocks = await yahooFinance.enrichStocksWithDayHigh(stocks);
+      filteredStocks = await marketService.enrichStocksWithDayHigh(stocks);
     } else {
       logger.info(`⚠️ Nifty 50 (${niftyData.currentPrice}) is below 20 EMA (${niftyData.ema20}). Filtering out all stocks.`);
       filteredStocks = [];

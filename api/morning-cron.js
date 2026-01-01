@@ -52,7 +52,7 @@
 
 const ChartinkScraper = require('../src/services/scraper.service');
 const EmailService = require('../src/services/email.service');
-const YahooFinanceService = require('../src/services/yahoo.service');
+const MarketDataService = require('../src/services/market.service');
 const logger = require('../src/utils/logger');
 
 module.exports = async (req, res) => {
@@ -76,11 +76,11 @@ module.exports = async (req, res) => {
     // Initialize services
     const scraper = new ChartinkScraper();
     const emailService = new EmailService();
-    const yahooFinance = new YahooFinanceService();
+    const marketService = new MarketDataService();
     
     // Step 1: Get Nifty 50 data and check if above EMA
     logger.info('📊 Checking Nifty 50 EMA condition...');
-    const niftyData = await yahooFinance.getNifty50Data();
+    const niftyData = await marketService.getNifty50Data();
     
     // Step 2: Scrape stocks from Chartink
     logger.info('🔍 Scraping stocks from Chartink...');
@@ -88,7 +88,7 @@ module.exports = async (req, res) => {
     
     // Step 3: Enrich stocks with current and previous day high data
     logger.info('💰 Enriching stocks with high data...');
-    const enrichedStocks = await yahooFinance.enrichStocksWithDayAndPrevHighs(stocks);
+    const enrichedStocks = await marketService.enrichStocksWithDayAndPrevHighs(stocks);
     
     // Step 4: Send morning email report
     await emailService.sendMorningStockReport(enrichedStocks, niftyData);

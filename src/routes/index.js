@@ -2,8 +2,6 @@ const express = require('express');
 const ChartinkScraper = require('../services/scraper.service');
 const EmailService = require('../services/email.service');
 const MarketDataService = require('../services/market.service');
-// const YahooFinanceService = require('../services/yahoo.service');
-// const NSEService = require('../services/nse.service');
 const helpers = require('../utils/helpers');
 const logger = require('../utils/logger');
 
@@ -11,8 +9,6 @@ const router = express.Router();
 const scraper = new ChartinkScraper();
 const emailService = new EmailService();
 const nseService = new MarketDataService();
-// const nseService = new NSEService();
-// const yahooFinance = new YahooFinanceService();
 
 /**
  * @swagger
@@ -320,7 +316,7 @@ router.post('/test-morning-email', async (req, res) => {
  * @swagger
  * /quote/{symbol}:
  *   get:
- *     summary: Get stock quote from Yahoo Finance
+ *     summary: Get stock quote from NSE
  *     description: Fetches real-time stock quote data including price, change, volume, and market cap
  *     tags: [Stock Data]
  *     parameters:

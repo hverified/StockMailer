@@ -122,8 +122,6 @@ class NSEService {
 
   async calculateNiftyEMA(currentPrice) {
     // Since NSE doesn't provide easy historical data access,
-    // we'll use a simplified approach or fall back to Yahoo Finance with delays
-    
     // Option 1: Use a fixed percentage (e.g., 98% of current price as conservative EMA)
     // This is a temporary solution
     const estimatedEMA = currentPrice * 0.98;

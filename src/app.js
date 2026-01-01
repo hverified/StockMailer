@@ -9,7 +9,6 @@ const routes = require('./routes');
 const swaggerSpecs = require('./config/swagger');
 const ChartinkScraper = require('./services/scraper.service');
 const EmailService = require('./services/email.service');
-const YahooFinanceService = require('./services/yahoo.service');
 const MarketDataService = require('./services/market.service');
 const homepageRoutes = require('./routes/homepage.routes');
 
@@ -49,7 +48,6 @@ if (!helpers.validateConfig()) {
 // Initialize services
 const scraper = new ChartinkScraper();
 const emailService = new EmailService();
-// const yahooFinance = new YahooFinanceService();
 const marketService = new MarketDataService();
 
 // Daily task function
