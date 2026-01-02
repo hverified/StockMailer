@@ -9,6 +9,10 @@ class ScanController {
     this.scraper = null;
     this.marketService = null;
     this.stockDBService = null;
+
+    this.testScrape = this.testScrape.bind(this);
+    this.getNiftyStatus = this.getNiftyStatus.bind(this);
+    this.runManualScan = this.runManualScan.bind(this);
   }
 
   _ensureServices() {

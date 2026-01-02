@@ -2,6 +2,10 @@
 const logger = require("../utils/logger");
 
 class HealthController {
+  constructor() {
+    this.getHealth = this.getHealth.bind(this);
+  }
+
   getHealth(req, res) {
     try {
       res.json({

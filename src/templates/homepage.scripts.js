@@ -45,6 +45,63 @@ const dom = {
   }
 };
 
+// Custom Alert Functions
+const customAlert = {
+  show: (options) => {
+    const {
+      type = 'success',
+      title = 'Success',
+      message = '',
+      details = null
+    } = options;
+
+    const icon = type === 'success' 
+      ? '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>'
+      : '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+    const iconClass = type === 'success' ? 'success' : 'error';
+
+    let detailsHtml = '';
+    if (details && typeof details === 'object') {
+      detailsHtml = \`
+        <div class="custom-alert-details">
+          \${Object.entries(details).map(([key, value]) => \`
+            <div class="custom-alert-detail">
+              <span class="custom-alert-detail-label">\${key}</span>
+              <span class="custom-alert-detail-value">\${value}</span>
+            </div>
+          \`).join('')}
+        </div>
+      \`;
+    }
+
+    const alertHtml = \`
+      <div class="custom-alert-overlay" onclick="customAlert.hide()">
+        <div class="custom-alert" onclick="event.stopPropagation()">
+          <div class="custom-alert-icon \${iconClass}">
+            \${icon}
+          </div>
+          <div class="custom-alert-title">\${title}</div>
+          <div class="custom-alert-message">\${message}</div>
+          \${detailsHtml}
+          <button class="custom-alert-button" onclick="customAlert.hide()">
+            Got it!
+          </button>
+        </div>
+      </div>
+    \`;
+
+    document.body.insertAdjacentHTML('beforeend', alertHtml);
+  },
+
+  hide: () => {
+    const overlay = document.querySelector('.custom-alert-overlay');
+    if (overlay) {
+      overlay.style.animation = 'fadeIn 0.2s ease reverse';
+      setTimeout(() => overlay.remove(), 200);
+    }
+  }
+};
+
 // Greeting Functions
 const greeting = {
   set: () => {
@@ -91,10 +148,15 @@ const components = {
     const title = isUp ? '#166534' : '#991b1b';
     const val = isUp ? '#16a34a' : '#dc2626';
     
+    const trendIcon = isUp 
+      ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>'
+      : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>';
+    
     return \`
       <div class="card" style="background:\${bg};border:1px solid \${border};">
-        <div style="font-size:15px;font-weight:600;color:\${title};margin-bottom:10px;">
-          \${isUp ? '🟢' : '🔴'} Nifty \${isUp ? 'Above' : 'Below'} 20 EMA
+        <div style="font-size:15px;font-weight:600;color:\${title};margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+          <span style="display:inline-flex;color:\${val};">\${trendIcon}</span>
+          <span>Nifty \${isUp ? 'Above' : 'Below'} 20 EMA</span>
         </div>
         <table width="100%">
           <tr>
@@ -121,6 +183,10 @@ const components = {
     const chg = parseFloat(stock.per_chg) || 0;
     const isUp = chg >= 0;
     
+    const changeIcon = isUp
+      ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>'
+      : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+    
     return \`
       <div class="card" style="border:1px dashed #c7c8c8;">
         <div style="font-weight:600;">\${stock.stock_name || 'N/A'}</div>
@@ -128,8 +194,9 @@ const components = {
         <div style="font-size:20px;font-weight:700;margin-top:6px;">
           ₹\${Number(stock.close || 0).toFixed(2)}
         </div>
-        <div style="font-size:13px;font-weight:700;color:\${isUp ? '#16a34a' : '#dc2626'};">
-          \${isUp ? '⬆' : '⬇'} \${isUp ? '+' : ''}\${chg.toFixed(2)}%
+        <div style="font-size:13px;font-weight:700;color:\${isUp ? '#16a34a' : '#dc2626'};display:flex;align-items:center;gap:4px;margin-top:3px;">
+          <span style="display:inline-flex;">\${changeIcon}</span>
+          <span>\${isUp ? '+' : ''}\${chg.toFixed(2)}%</span>
         </div>
         <div style="font-size:13px;margin-top:6px;">
           Volume: \${stock.volume ? utils.formatNumber(stock.volume) : '—'}
@@ -147,7 +214,7 @@ const components = {
   
   emptyState: (icon, title, message) => \`
     <div class="card" style="text-align:center;padding:40px;">
-      <div style="font-size:48px;margin-bottom:12px;">\${icon}</div>
+      <div style="margin-bottom:12px;display:inline-flex;color:#6b7280;">\${icon}</div>
       <h3 style="margin:0 0 8px;">\${title}</h3>
       <p style="color:#6b7280;">\${message}</p>
     </div>
@@ -167,10 +234,15 @@ async function loadHealth() {
   const title = isUp ? '#166534' : '#991b1b';
   const val = isUp ? '#16a34a' : '#dc2626';
   
+  const statusIcon = isUp
+    ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>'
+    : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+  
   dom.setContent(\`
     <div class="card" style="background:\${bg};border:1px solid \${border};">
-      <div style="font-size:15px;font-weight:600;color:\${title};margin-bottom:10px;">
-        \${isUp ? '🟢' : '🔴'} System \${isUp ? 'Operational' : 'Attention Needed'}
+      <div style="font-size:15px;font-weight:600;color:\${title};margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+        <span style="display:inline-flex;color:\${val};">\${statusIcon}</span>
+        <span>System \${isUp ? 'Operational' : 'Attention Needed'}</span>
       </div>
       <table width="100%">
         <tr>
@@ -226,7 +298,7 @@ async function loadHistory() {
   
   if (!data.success || data.dates.length === 0) {
     dom.addContent(components.emptyState(
-      '📊',
+      '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>',
       'No History Yet',
       'Run a scan to start building history'
     ));
@@ -237,17 +309,45 @@ async function loadHistory() {
   
   const historyHtml = data.dates.map(d => {
     const isUp = d.niftyData?.isAboveEMA;
-    const icon = isUp ? '🟢' : '🔴';
+    
+    const trendIcon = isUp
+      ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>'
+      : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>';
+    
+    const stockIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>';
     
     return \`
       <div class="history-item" onclick="loadHistoryDetail('\${d.date}')">
-        <div class="history-date">
-          \${icon} \${utils.formatDate(d.date)}
+        <div class="history-header">
+          <div class="history-date">
+            <span>\${utils.formatDate(d.date)}</span>
+          </div>
+          <div class="history-stock-count">
+            <span style="display:inline-flex;">\${stockIcon}</span>
+            <span>\${d.count} stock\${d.count === 1 ? '' : 's'}</span>
+          </div>
         </div>
-        <div class="history-meta">
-          \${d.count} stocks • 
-          Nifty: ₹\${d.niftyData?.currentPrice?.toFixed(2) || 'N/A'} • 
-          EMA: ₹\${d.niftyData?.ema20?.toFixed(2) || 'N/A'}
+        
+        <div class="history-stats">
+          <div class="history-stat">
+            <div class="history-stat-label">Status</div>
+            <div class="history-stat-value">
+              <span class="history-badge \${!isUp ? 'bearish' : ''}" style="display:inline-flex;align-items:center;gap:4px;">
+                <span style="display:inline-flex;">\${trendIcon}</span>
+                <span>\${isUp ? 'Bullish' : 'Bearish'}</span>
+              </span>
+            </div>
+          </div>
+          
+          <div class="history-stat">
+            <div class="history-stat-label">Nifty</div>
+            <div class="history-stat-value">₹\${d.niftyData?.currentPrice?.toFixed(2) || 'N/A'}</div>
+          </div>
+          
+          <div class="history-stat">
+            <div class="history-stat-label">20 EMA</div>
+            <div class="history-stat-value">₹\${d.niftyData?.ema20?.toFixed(2) || 'N/A'}</div>
+          </div>
         </div>
       </div>
     \`;
@@ -285,22 +385,44 @@ async function loadHistoryDetail(date) {
 async function runManualScan() {
   const btn = dom.get('manualScanBtn');
   btn.disabled = true;
-  btn.innerText = '⏳ Running...';
+  btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;animation:spin 1s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>Running...';
   
   try {
     const data = await api.post('/manual-scan');
     
     if (data.success) {
-      alert(\`Scan completed! Found \${data.stocksScraped} stocks. Saved to database.\`);
-      loadHistory();
+      customAlert.show({
+        type: 'success',
+        title: 'Scan Completed Successfully!',
+        message: 'Your stock scan has been completed and the results have been saved to the database.',
+        details: {
+          'Stocks Found': data.stocksScraped,
+          'Stocks Saved': data.stocksSaved,
+          'Nifty Status': data.niftyData?.isAboveEMA 
+            ? '<span style="display:inline-flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg> Above EMA</span>' 
+            : '<span style="display:inline-flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg> Below EMA</span>',
+          'Nifty Price': '₹' + data.niftyData?.currentPrice?.toFixed(2)
+        }
+      });
+      
+      // Reload history after alert is shown
+      setTimeout(() => loadHistory(), 500);
     } else {
-      alert('Scan failed: ' + data.error);
+      customAlert.show({
+        type: 'error',
+        title: 'Scan Failed',
+        message: data.error || 'An error occurred while running the scan.'
+      });
     }
   } catch (error) {
-    alert('Error: ' + error.message);
+    customAlert.show({
+      type: 'error',
+      title: 'Error',
+      message: error.message || 'An unexpected error occurred.'
+    });
   } finally {
     btn.disabled = false;
-    btn.innerText = '▶️ Run Scan';
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>Run Scan';
   }
 }
 

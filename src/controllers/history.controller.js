@@ -5,6 +5,8 @@ const logger = require("../utils/logger");
 class HistoryController {
   constructor() {
     this.stockDBService = null;
+    this.getScanHistory = this.getScanHistory.bind(this);
+    this.getScanHistoryByDate = this.getScanHistoryByDate.bind(this);
   }
 
   _ensureService() {
