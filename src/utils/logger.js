@@ -1,10 +1,10 @@
-const winston = require('winston');
-const path = require('path');
-const fs = require('fs');
-const config = require('../config');
+const winston = require("winston");
+const path = require("path");
+const fs = require("fs");
+const config = require("../config/app.config");
 
 // Only use /tmp on Vercel since it's the only writable directory
-const logDir = process.env.VERCEL ? '/tmp' : 'logs';
+const logDir = process.env.VERCEL ? "/tmp" : "logs";
 
 // Create directory if possible
 try {
@@ -12,7 +12,7 @@ try {
     fs.mkdirSync(logDir, { recursive: true });
   }
 } catch (err) {
-  console.warn('Could not create log directory:', err.message);
+  console.warn("Could not create log directory:", err.message);
 }
 
 const transports = [
@@ -22,28 +22,32 @@ const transports = [
       winston.format.printf(({ timestamp, level, message }) => {
         return `[${timestamp}] ${level}: ${message}`;
       })
-    )
-  })
+    ),
+  }),
 ];
 
 // Only add file transports if not running on Vercel
 if (!process.env.VERCEL) {
   transports.push(
-    new winston.transports.File({ filename: path.join(logDir, 'error.log'), level: 'error' }),
-    new winston.transports.File({ filename: path.join(logDir, 'combined.log') })
+    new winston.transports.File({
+      filename: path.join(logDir, "error.log"),
+      level: "error",
+    }),
+    new winston.transports.File({ filename: path.join(logDir, "combined.log") })
   );
 }
 
 const logger = winston.createLogger({
-  level: config.server.env === 'production' ? 'info' : 'debug',
+  // level: config.server.env === "production" ? "info" : "debug",
+  level: "debug",
   format: winston.format.combine(
-    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+    winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
     winston.format.errors({ stack: true }),
     winston.format.printf(({ timestamp, level, message, stack }) => {
       return `[${timestamp}] ${level.toUpperCase()}: ${stack || message}`;
     })
   ),
-  transports
+  transports,
 });
 
 module.exports = logger;

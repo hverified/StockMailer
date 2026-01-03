@@ -238,6 +238,30 @@ async function loadHealth() {
     ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>'
     : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
   
+  // Format uptime properly
+  const uptimeSeconds = parseFloat(data.uptime) || 0;
+  const uptimeMinutes = uptimeSeconds / 60;
+  const uptimeHours = uptimeMinutes / 60;
+  
+  let uptimeDisplay = '';
+  if (uptimeHours >= 1) {
+    uptimeDisplay = \`\${uptimeHours.toFixed(1)} hrs\`;
+  } else {
+    uptimeDisplay = \`\${uptimeMinutes.toFixed(1)} min\`;
+  }
+  
+  // Format memory properly
+  const memoryBytes = parseFloat(data.memory) || 0;
+  const memoryMB = memoryBytes / (1024 * 1024);
+  const memoryGB = memoryMB / 1024;
+  
+  let memoryDisplay = '';
+  if (memoryGB >= 1) {
+    memoryDisplay = \`\${memoryGB.toFixed(2)} GB\`;
+  } else {
+    memoryDisplay = \`\${memoryMB.toFixed(1)} MB\`;
+  }
+  
   dom.setContent(\`
     <div class="card" style="background:\${bg};border:1px solid \${border};">
       <div style="font-size:15px;font-weight:600;color:\${title};margin-bottom:10px;display:flex;align-items:center;gap:8px;">
@@ -249,14 +273,14 @@ async function loadHealth() {
           <td style="background:white;border-radius:12px;padding:10px;text-align:center;">
             <div style="font-size:11.5px;color:#6b7280;">Uptime</div>
             <div style="font-size:16.5px;font-weight:700;color:\${val};">
-              \${(data.uptime/60).toFixed(1)} min
+              \${uptimeDisplay}
             </div>
           </td>
           <td width="12"></td>
           <td style="background:white;border-radius:12px;padding:10px;text-align:center;">
             <div style="font-size:11.5px;color:#6b7280;">Memory</div>
             <div style="font-size:16.5px;font-weight:700;color:\${val};">
-              \${(data.memory/1024/1024).toFixed(1)} MB
+              \${memoryDisplay}
             </div>
           </td>
         </tr>

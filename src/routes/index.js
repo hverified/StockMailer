@@ -1,14 +1,26 @@
-const express = require('express');
-const ChartinkScraper = require('../services/scraper.service');
-const EmailService = require('../services/email.service');
-const MarketDataService = require('../services/market.service');
-const helpers = require('../utils/helpers');
-const logger = require('../utils/logger');
+// src/routes/index.js
+/**
+ * Main API Routes
+ * Handles email testing and report generation
+ */
+
+const express = require("express");
+const ChartinkScraper = require("../services/scraper.service");
+const EmailService = require("../services/email.service");
+const MarketDataService = require("../services/market.service");
+const logger = require("../utils/logger");
+const DateUtil = require("../utils/date.util");
+const {
+  asyncHandler,
+  AppError,
+} = require("../middleware/error-handler.middleware");
 
 const router = express.Router();
+
+// Initialize services
 const scraper = new ChartinkScraper();
 const emailService = new EmailService();
-const nseService = new MarketDataService();
+const marketService = new MarketDataService();
 
 /**
  * @swagger
@@ -20,31 +32,14 @@ const nseService = new MarketDataService();
  *     responses:
  *       200:
  *         description: API is healthy
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: healthy
- *                 timestamp:
- *                   type: string
- *                   example: "18/11/2025, 5:00:00 PM"
- *                 scheduler:
- *                   type: string
- *                   example: active
- *                 nextRun:
- *                   type: string
- *                   example: "5:00 PM daily"
  */
-router.get('/health', (req, res) => {
+router.get("/health", (req, res) => {
   res.json({
-    status: 'healthy',
-    timestamp: helpers.currentDateTime(),
-    scheduler: 'active',
-    morningReport: '9:29 AM (Mon-Fri)',
-    eveningReport: '5:00 PM (Mon-Fri)'
+    status: "healthy",
+    timestamp: DateUtil.formatDateTime(),
+    scheduler: "active",
+    morningReport: "9:29 AM (Mon-Fri)",
+    eveningReport: "5:00 PM (Mon-Fri)",
   });
 });
 
@@ -58,72 +53,42 @@ router.get('/health', (req, res) => {
  *     responses:
  *       200:
  *         description: Report generated and sent successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Report generated and sent successfully
- *                 niftyAboveEMA:
- *                   type: boolean
- *                   example: true
- *                 niftyPrice:
- *                   type: number
- *                   example: 19850.25
- *                 ema20:
- *                   type: number
- *                   example: 19500.00
- *                 stocksScraped:
- *                   type: integer
- *                   example: 25
- *                 stocksIncluded:
- *                   type: integer
- *                   example: 25
- *       500:
- *         description: Error generating report
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  */
-router.post('/trigger-report', async (req, res) => {
-  try {
-    logger.info('Manual trigger: Starting stock report generation...');
-    
+router.post(
+  "/trigger-report",
+  asyncHandler(async (req, res) => {
+    logger.info("Manual trigger: Starting stock report generation...");
+
     // Check Nifty 50 condition
-    const niftyData = await nseService.getNifty50Data();
-    
+    const niftyData = await marketService.getNifty50Data();
+
     // Scrape stocks
     const stocks = await scraper.scrapeStocks();
-    
+
     // Filter stocks based on Nifty 50 EMA
     let filteredStocks = [];
     if (niftyData.isAboveEMA) {
-      filteredStocks = await nseService.enrichStocksWithDayHigh(stocks);
+      logger.info(`Nifty above EMA - including ${stocks.length} stocks`);
+      filteredStocks = await marketService.enrichStocksWithDayHigh(stocks);
+    } else {
+      logger.info("Nifty below EMA - excluding all stocks");
     }
-    
+
     // Send email
     await emailService.sendStockReport(filteredStocks, niftyData);
-    
-    res.json({ 
-      success: true, 
-      message: 'Report generated and sent successfully',
+
+    res.json({
+      success: true,
+      message: "Report generated and sent successfully",
       niftyAboveEMA: niftyData.isAboveEMA,
       niftyPrice: niftyData.currentPrice,
       ema20: niftyData.ema20,
       stocksScraped: stocks.length,
-      stocksIncluded: filteredStocks.length
+      stocksIncluded: filteredStocks.length,
+      timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    logger.error(`Manual trigger failed: ${error.message}`);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+  })
+);
 
 /**
  * @swagger
@@ -135,39 +100,38 @@ router.post('/trigger-report', async (req, res) => {
  *     responses:
  *       200:
  *         description: Morning report generated and sent successfully
- *       500:
- *         description: Error generating morning report
  */
-router.post('/trigger-morning-report', async (req, res) => {
-  try {
-    logger.info('Manual trigger: Starting morning report generation...');
-    
+router.post(
+  "/trigger-morning-report",
+  asyncHandler(async (req, res) => {
+    logger.info("Manual trigger: Starting morning report generation...");
+
     // Check Nifty 50 condition
-    const niftyData = await nseService.getNifty50Data();
-    
+    const niftyData = await marketService.getNifty50Data();
+
     // Scrape stocks
     const stocks = await scraper.scrapeStocks();
-    
+
     // Enrich stocks with current and previous day highs
-    const enrichedStocks = await nseService.enrichStocksWithDayAndPrevHighs(stocks);
-    
+    const enrichedStocks = await marketService.enrichStocksWithDayAndPrevHighs(
+      stocks
+    );
+
     // Send morning email
     await emailService.sendMorningStockReport(enrichedStocks, niftyData);
-    
-    res.json({ 
-      success: true, 
-      message: 'Morning report generated and sent successfully',
+
+    res.json({
+      success: true,
+      message: "Morning report generated and sent successfully",
       niftyAboveEMA: niftyData.isAboveEMA,
       niftyPrice: niftyData.currentPrice,
       ema20: niftyData.ema20,
       stocksScraped: stocks.length,
-      stocksProcessed: enrichedStocks.length
+      stocksProcessed: enrichedStocks.length,
+      timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    logger.error(`Manual morning trigger failed: ${error.message}`);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+  })
+);
 
 /**
  * @swagger
@@ -179,36 +143,19 @@ router.post('/trigger-morning-report', async (req, res) => {
  *     responses:
  *       200:
  *         description: Successfully scraped stocks
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 count:
- *                   type: integer
- *                   example: 25
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Stock'
- *       500:
- *         description: Error scraping stocks
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  */
-router.get('/test-scrape', async (req, res) => {
-  try {
+router.get(
+  "/test-scrape",
+  asyncHandler(async (req, res) => {
     const stocks = await scraper.scrapeStocks();
-    res.json({ success: true, count: stocks.length, data: stocks });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+    res.json({
+      success: true,
+      count: stocks.length,
+      data: stocks,
+      timestamp: new Date().toISOString(),
+    });
+  })
+);
 
 /**
  * @swagger
@@ -220,38 +167,21 @@ router.get('/test-scrape', async (req, res) => {
  *     responses:
  *       200:
  *         description: Successfully fetched Nifty 50 data
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   $ref: '#/components/schemas/NiftyData'
- *                 message:
- *                   type: string
- *                   example: Nifty is above 20 EMA
- *       500:
- *         description: Error fetching Nifty data
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  */
-router.get('/test-nifty', async (req, res) => {
-  try {
-    const niftyData = await nseService.getNifty50Data();
-    res.json({ 
-      success: true, 
+router.get(
+  "/test-nifty",
+  asyncHandler(async (req, res) => {
+    const niftyData = await marketService.getNifty50Data();
+    res.json({
+      success: true,
       data: niftyData,
-      message: niftyData.isAboveEMA ? 'Nifty is above 20 EMA' : 'Nifty is below 20 EMA'
+      message: niftyData.isAboveEMA
+        ? "Nifty is above 20 EMA"
+        : "Nifty is below 20 EMA",
+      timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+  })
+);
 
 /**
  * @swagger
@@ -263,32 +193,18 @@ router.get('/test-nifty', async (req, res) => {
  *     responses:
  *       200:
  *         description: Test email sent successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Test email sent successfully
- *       500:
- *         description: Error sending email
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  */
-router.post('/test-email', async (req, res) => {
-  try {
+router.post(
+  "/test-email",
+  asyncHandler(async (req, res) => {
     await emailService.sendTestEmail();
-    res.json({ success: true, message: 'Test email sent successfully' });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+    res.json({
+      success: true,
+      message: "Test email sent successfully",
+      timestamp: new Date().toISOString(),
+    });
+  })
+);
 
 /**
  * @swagger
@@ -300,17 +216,18 @@ router.post('/test-email', async (req, res) => {
  *     responses:
  *       200:
  *         description: Test morning email sent successfully
- *       500:
- *         description: Error sending morning email
  */
-router.post('/test-morning-email', async (req, res) => {
-  try {
+router.post(
+  "/test-morning-email",
+  asyncHandler(async (req, res) => {
     await emailService.sendTestMorningEmail();
-    res.json({ success: true, message: 'Test morning email sent successfully' });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+    res.json({
+      success: true,
+      message: "Test morning email sent successfully",
+      timestamp: new Date().toISOString(),
+    });
+  })
+);
 
 /**
  * @swagger
@@ -330,30 +247,28 @@ router.post('/test-morning-email', async (req, res) => {
  *     responses:
  *       200:
  *         description: Successfully fetched stock quote
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   $ref: '#/components/schemas/StockQuote'
- *       500:
- *         description: Error fetching quote
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  */
-router.get('/quote/:symbol', async (req, res) => {
-  try {
-    const quote = await nseService.getStockQuote(req.params.symbol);
-    res.json({ success: true, data: quote });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+router.get(
+  "/quote/:symbol",
+  asyncHandler(async (req, res) => {
+    const { symbol } = req.params;
+
+    if (!symbol) {
+      throw new AppError("Stock symbol is required", 400);
+    }
+
+    const quote = await marketService.getStockQuote(symbol);
+
+    if (!quote) {
+      throw new AppError(`Quote not found for symbol: ${symbol}`, 404);
+    }
+
+    res.json({
+      success: true,
+      data: quote,
+      timestamp: new Date().toISOString(),
+    });
+  })
+);
 
 module.exports = router;

@@ -1,7 +1,11 @@
 // src/services/market.service.js
-const NSEService = require('./nse.service');
-const NiftyDBService = require('./nifty.db.service');
-const logger = require('../utils/logger');
+const NSEService = require("./nse.service");
+const NiftyDBService = require("./nifty.db.service");
+const logger = require("../utils/logger");
+const {
+  ExternalServiceError,
+} = require("../middleware/error-handler.middleware");
+const config = require("../config/app.config");
 
 class MarketDataService {
   constructor() {
@@ -22,111 +26,123 @@ class MarketDataService {
 
   async getNifty50Data() {
     try {
-      logger.info('Fetching Nifty 50 data from NSE...');
-      
-      // Get current price from NSE
+      logger.info("Fetching Nifty 50 data from NSE...");
+
       const niftyData = await this.nseService.getNifty50Data();
+      if (!niftyData) {
+        throw new ExternalServiceError("Failed to fetch Nifty 50 data", "NSE");
+      }
+
       const currentPrice = niftyData.currentPrice;
-      
-      // Save current price to database
       await this.niftyDBService.saveNiftyData(currentPrice);
-      
-      // Calculate EMA20 from database
+
       const ema20 = await this.niftyDBService.calculateEMA20();
-      
+
       if (!ema20) {
-        logger.warn('Could not calculate EMA20, using estimation');
+        logger.warn("Could not calculate EMA20, using estimation");
         return {
           currentPrice,
-          ema20: currentPrice * 0.98, // Fallback estimation
+          ema20: currentPrice * 0.98,
           isAboveEMA: true,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
       }
-      
+
       return {
         currentPrice,
         ema20,
         isAboveEMA: currentPrice > ema20,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
-      logger.error(`Error fetching Nifty 50 data: ${error.message}`);
+      logger.error("Error fetching Nifty 50 data:", error);
       throw error;
     }
   }
 
   async enrichStocksWithDayHigh(stocks) {
     logger.info(`Enriching ${stocks.length} stocks with NSE data...`);
-    
+
     const enrichedStocks = [];
-    
+    const rateLimit = config.nse.rateLimit;
+
     for (let i = 0; i < stocks.length; i++) {
       const stock = stocks[i];
-      
+
       try {
         logger.info(`Processing ${i + 1}/${stocks.length}: ${stock.symbol}`);
-        
+
         const quote = await this.nseService.getStockQuote(stock.symbol);
-        
+
         enrichedStocks.push({
           ...stock,
-          dayHigh: quote ? quote.dayHigh : null
+          dayHigh: quote ? quote.dayHigh : null,
         });
-        
+
         if (i < stocks.length - 1) {
-          await this.nseService.delay(1000);
+          const delay =
+            Math.random() * (rateLimit.maxDelayMs - rateLimit.minDelayMs) +
+            rateLimit.minDelayMs;
+          await new Promise((resolve) => setTimeout(resolve, delay));
         }
       } catch (error) {
         logger.error(`Error enriching ${stock.symbol}: ${error.message}`);
         enrichedStocks.push({
           ...stock,
-          dayHigh: null
+          dayHigh: null,
         });
       }
     }
-    
+
     return enrichedStocks;
   }
 
   async enrichStocksWithDayAndPrevHighs(stocks) {
-    logger.info(`Enriching ${stocks.length} stocks with NSE data...`);
-    
+    logger.info(`Enriching ${stocks.length} stocks with high data...`);
+
     const enrichedStocks = [];
-    
+    const rateLimit = config.nse.rateLimit;
+
     for (let i = 0; i < stocks.length; i++) {
       const stock = stocks[i];
-      
+
       try {
         logger.info(`Processing ${i + 1}/${stocks.length}: ${stock.symbol}`);
-        
+
         const quote = await this.nseService.getStockQuote(stock.symbol);
-        const historicalData = await this.nseService.getHistoricalData(stock.symbol, 5);
-        
+        const historicalData = await this.nseService.getHistoricalData(
+          stock.symbol,
+          5
+        );
+
         let prevDayHigh = null;
         if (historicalData.length >= 2) {
-          prevDayHigh = historicalData[historicalData.length - 2].CH_TRADE_HIGH_PRICE;
+          prevDayHigh =
+            historicalData[historicalData.length - 2].CH_TRADE_HIGH_PRICE;
         }
-        
+
         enrichedStocks.push({
           ...stock,
           todayHigh: quote ? quote.dayHigh : null,
-          prevDayHigh: prevDayHigh
+          prevDayHigh: prevDayHigh,
         });
-        
+
         if (i < stocks.length - 1) {
-          await this.nseService.delay(1500);
+          const delay =
+            Math.random() * (rateLimit.maxDelayMs - rateLimit.minDelayMs) +
+            rateLimit.minDelayMs;
+          await new Promise((resolve) => setTimeout(resolve, delay));
         }
       } catch (error) {
         logger.error(`Error enriching ${stock.symbol}: ${error.message}`);
         enrichedStocks.push({
           ...stock,
           todayHigh: null,
-          prevDayHigh: null
+          prevDayHigh: null,
         });
       }
     }
-    
+
     return enrichedStocks;
   }
 }

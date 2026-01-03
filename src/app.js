@@ -1,11 +1,15 @@
 // src/app.js
+/**
+ * Express Application Setup
+ * Main application configuration with middleware and routes
+ */
+
 const express = require("express");
 const path = require("path");
 const cron = require("node-cron");
 const swaggerUi = require("swagger-ui-express");
-const config = require("./config");
+const config = require("./config/app.config");
 const logger = require("./utils/logger");
-const helpers = require("./utils/helpers");
 const routes = require("./routes");
 const swaggerSpecs = require("./config/swagger");
 const mongodb = require("./config/mongodb");
@@ -15,17 +19,34 @@ const MarketDataService = require("./services/market.service");
 const StockDBService = require("./services/stock.db.service");
 const homepageRoutes = require("./routes/homepage.routes");
 
+// Import error handling middleware
+const {
+  errorHandler,
+  notFoundHandler,
+} = require("./middleware/error-handler.middleware");
+
 const app = express();
 
-// Middleware
+// ============================================
+// Basic Middleware
+// ============================================
+
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Request logging middleware
 app.use((req, res, next) => {
   logger.debug(`${req.method} ${req.path}`);
   next();
 });
+
+// Static files
 app.use(express.static(path.join(__dirname, "..", "public")));
 
-// Swagger UI
+// ============================================
+// API Documentation
+// ============================================
+
 app.use(
   "/api-docs",
   swaggerUi.serve,
@@ -40,23 +61,42 @@ app.use(
   })
 );
 
-// Routes
+// ============================================
+// Application Routes
+// ============================================
+
+// Homepage and UI routes
 app.use("/", homepageRoutes);
+
+// API routes
 app.use("/", routes);
 
-// Validate configuration
-if (!helpers.validateConfig()) {
-  logger.error("Configuration validation failed. Exiting...");
-  process.exit(1);
-}
+// ============================================
+// Error Handling (Must be after all routes)
+// ============================================
 
-// Initialize services
+// 404 handler - catches all undefined routes
+app.use(notFoundHandler);
+
+// Global error handler - catches all errors
+app.use(errorHandler);
+
+// ============================================
+// Service Initialization
+// ============================================
+
 const scraper = new ChartinkScraper();
 const emailService = new EmailService();
 const marketService = new MarketDataService();
 const stockDBService = new StockDBService();
 
-// Daily task function
+// ============================================
+// Scheduled Tasks
+// ============================================
+
+/**
+ * Daily task function for scheduled reports
+ */
 async function runDailyTask() {
   try {
     logger.info("🚀 Starting daily task...");
@@ -99,34 +139,60 @@ async function runDailyTask() {
 
     logger.info("✅ Daily task completed successfully");
   } catch (error) {
-    logger.error(`❌ Daily task failed: ${error.message}`);
+    logger.error("❌ Daily task failed:", error);
     logger.error(error.stack);
   }
 }
 
-// Setup scheduler
+/**
+ * Setup cron job for evening report
+ */
 cron.schedule(
-  config.scheduler.cronTime,
+  config.scheduler.eveningReport.cronTime,
   async () => {
-    logger.info("⏰ Running scheduled daily stock report task...");
+    logger.info("⏰ Running scheduled evening stock report...");
     await runDailyTask();
   },
   {
-    timezone: config.scheduler.timezone,
+    timezone: config.scheduler.eveningReport.timezone,
   }
 );
 
 logger.info(
-  `📅 Scheduler configured: ${config.scheduler.cronTime} (${config.scheduler.timezone})`
+  `📅 Evening report scheduled: ${config.scheduler.eveningReport.cronTime} (${config.scheduler.eveningReport.timezone})`
 );
-logger.info(`📚 API Documentation available at: /api-docs`);
+logger.info(`📚 API Documentation: /api-docs`);
+logger.info(`🌐 Environment: ${config.app.env}`);
 
-// Graceful shutdown
+// ============================================
+// Graceful Shutdown
+// ============================================
+
 process.on("SIGTERM", async () => {
   logger.info("SIGTERM received, closing MongoDB connection...");
-  await mongodb.disconnect();
+  try {
+    await mongodb.disconnect();
+    logger.info("MongoDB connection closed");
+  } catch (error) {
+    logger.error("Error closing MongoDB:", error);
+  }
   process.exit(0);
 });
+
+process.on("SIGINT", async () => {
+  logger.info("SIGINT received, closing MongoDB connection...");
+  try {
+    await mongodb.disconnect();
+    logger.info("MongoDB connection closed");
+  } catch (error) {
+    logger.error("Error closing MongoDB:", error);
+  }
+  process.exit(0);
+});
+
+// ============================================
+// Exports
+// ============================================
 
 module.exports = app;
 module.exports.runDailyTask = runDailyTask;
