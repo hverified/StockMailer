@@ -4,22 +4,31 @@ const healthController = require("../controllers/health.controller");
 const scanController = require("../controllers/scan.controller");
 const historyController = require("../controllers/history.controller");
 const viewController = require("../controllers/view.controller");
+const { ensureDbConnection } = require("../middleware/db.middleware");
 
 const router = express.Router();
 
-// Homepage View
+// Homepage View (no DB needed)
 router.get("/", viewController.renderHomepage);
 
-// Health Check
+// Health Check (no DB needed)
 router.get("/health", healthController.getHealth);
 
-// Scan Operations
+// Scan Operations (require DB)
 router.get("/test-scrape", scanController.testScrape);
 router.get("/nifty-status", scanController.getNiftyStatus);
-router.post("/manual-scan", scanController.runManualScan);
+router.post("/manual-scan", ensureDbConnection, scanController.runManualScan);
 
-// History Operations
-router.get("/scan-history", historyController.getScanHistory);
-router.get("/scan-history/:date", historyController.getScanHistoryByDate);
+// History Operations (require DB) - ADD MIDDLEWARE HERE
+router.get(
+  "/scan-history",
+  ensureDbConnection,
+  historyController.getScanHistory
+);
+router.get(
+  "/scan-history/:date",
+  ensureDbConnection,
+  historyController.getScanHistoryByDate
+);
 
 module.exports = router;
