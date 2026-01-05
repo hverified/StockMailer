@@ -443,6 +443,13 @@ async function loadHistoryDetail(date) {
     const chg = parseFloat(s.per_chg) || 0;
     const isUp = chg >= 0;
     
+    // Calculate trading parameters
+    const dayHigh = Number(s.dayHigh) || 0;
+    const dayLow = Number(s.dayLow) || 0;
+    const buyPrice = dayHigh > 0 ? dayHigh * 1.001 : 0;
+    const stoploss = buyPrice > 0 ? buyPrice * 0.975 : 0;
+    const target = buyPrice > 0 ? buyPrice * 1.004 : 0;
+    
     const changeIcon = isUp
       ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>'
       : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
@@ -467,23 +474,45 @@ async function loadHistoryDetail(date) {
           </div>
         </div>
         
-        <div class="history-stats">
+        <div class="history-stats" style="grid-template-columns:repeat(3, 1fr);">
           <div class="history-stat">
             <div class="history-stat-label">Day High</div>
-            <div class="history-stat-value">₹\${s.dayHigh ? Number(s.dayHigh).toFixed(2) : 'N/A'}</div>
+            <div class="history-stat-value">₹\${dayHigh > 0 ? dayHigh.toFixed(2) : 'N/A'}</div>
+          </div>
+          
+          <div class="history-stat">
+            <div class="history-stat-label">Day Low</div>
+            <div class="history-stat-value">₹\${dayLow > 0 ? dayLow.toFixed(2) : 'N/A'}</div>
           </div>
           
           <div class="history-stat">
             <div class="history-stat-label">Volume</div>
             <div class="history-stat-value" style="display:flex;align-items:center;justify-content:center;gap:4px;">
-              <span style="display:inline-flex;color:#6b7280;">\${volumeIcon}</span>
               <span>\${s.volume ? utils.formatNumber(s.volume) : '—'}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="history-stats">
+          <div class="history-stat">
+            <div class="history-stat-label">Buy At</div>
+            <div class="history-stat-value" style="display:flex;align-items:center;justify-content:center;gap:4px;">
+              <span>₹\${buyPrice > 0 ? buyPrice.toFixed(2) : 'N/A'}</span>
+            </div>
+          </div>
+          
+          <div class="history-stat" >
+            <div class="history-stat-label">Stoploss</div>
+            <div class="history-stat-value" style="display:flex;align-items:center;justify-content:center;gap:4px;">
+              <span>₹\${stoploss > 0 ? stoploss.toFixed(2) : 'N/A'}</span>
             </div>
           </div>
           
           <div class="history-stat">
-            <div class="history-stat-label">BSE Code</div>
-            <div class="history-stat-value">\${s.bsecode || 'N/A'}</div>
+            <div class="history-stat-label">Target</div>
+            <div class="history-stat-value" style="display:flex;align-items:center;justify-content:center;gap:4px;">
+              <span>₹\${target > 0 ? target.toFixed(2) : 'N/A'}</span>
+            </div>
           </div>
         </div>
       </div>

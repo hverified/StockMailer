@@ -77,6 +77,7 @@ class MarketDataService {
         enrichedStocks.push({
           ...stock,
           dayHigh: quote ? quote.dayHigh : null,
+          dayLow: quote ? quote.dayLow : null, // Added dayLow
         });
 
         if (i < stocks.length - 1) {
@@ -90,6 +91,7 @@ class MarketDataService {
         enrichedStocks.push({
           ...stock,
           dayHigh: null,
+          dayLow: null,
         });
       }
     }
@@ -124,6 +126,7 @@ class MarketDataService {
         enrichedStocks.push({
           ...stock,
           todayHigh: quote ? quote.dayHigh : null,
+          todayLow: quote ? quote.dayLow : null, // Added todayLow
           prevDayHigh: prevDayHigh,
         });
 
@@ -138,6 +141,7 @@ class MarketDataService {
         enrichedStocks.push({
           ...stock,
           todayHigh: null,
+          todayLow: null,
           prevDayHigh: null,
         });
       }
