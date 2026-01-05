@@ -6,12 +6,30 @@ const utils = {
   
   formatNumber: (num) => Number(num).toLocaleString('en-IN'),
   
-  formatDate: (dateStr) => new Date(dateStr).toLocaleDateString('en-IN', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric'
-  }),
+  formatDate: (dateStr) => {
+    // Handle null, undefined, or invalid dates
+    if (!dateStr || dateStr === 'null' || dateStr === 'undefined') {
+      return 'Invalid Date';
+    }
+    
+    try {
+      const date = new Date(dateStr);
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return 'Invalid Date';
+      }
+      
+      return date.toLocaleDateString('en-IN', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
+    } catch (error) {
+      console.error('Date formatting error:', error);
+      return 'Invalid Date';
+    }
+  },
   
   getCurrentDate: () => new Date().toLocaleDateString('en-IN', {
     weekday: 'long',
@@ -320,7 +338,7 @@ async function loadHistory() {
   const data = await api.get('/scan-history');
   dom.setContent('');
   
-  if (!data.success || data.dates.length === 0) {
+  if (!data.success || !data.dates || data.dates.length === 0) {
     dom.addContent(components.emptyState(
       '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>',
       'No History Yet',
@@ -332,6 +350,12 @@ async function loadHistory() {
   dom.addContent(components.countStrip(data.dates.length, '').replace('found today', \`scan\${data.dates.length === 1 ? '' : 's'}\`).replace('Showing last ', 'Showing last '));
   
   const historyHtml = data.dates.map(d => {
+    // Validate that date exists and is not null
+    if (!d.date) {
+      console.warn('Invalid date in history item:', d);
+      return '';
+    }
+    
     const isUp = d.niftyData?.isAboveEMA;
     
     const trendIcon = isUp
@@ -375,12 +399,22 @@ async function loadHistory() {
         </div>
       </div>
     \`;
-  }).join('');
+  }).filter(Boolean).join(''); // Filter out empty strings from invalid dates
   
   dom.addContent('<div>' + historyHtml + '</div>');
 }
 
 async function loadHistoryDetail(date) {
+  // Validate date parameter
+  if (!date || date === 'null' || date === 'undefined') {
+    dom.setContent(components.emptyState(
+      '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>',
+      'Invalid Date',
+      'The selected date is invalid. Please try again.'
+    ));
+    return;
+  }
+  
   dom.showLoader(3);
   await utils.sleep(200);
   

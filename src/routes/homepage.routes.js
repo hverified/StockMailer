@@ -39,8 +39,13 @@ router.get("/test-scrape", asyncHandler(scanController.testScrape));
 /**
  * @route GET /nifty-status
  * @desc Get current Nifty 50 status and EMA
+ * @access Requires database connection
  */
-router.get("/nifty-status", asyncHandler(scanController.getNiftyStatus));
+router.get(
+  "/nifty-status",
+  ensureDbConnection,
+  asyncHandler(scanController.getNiftyStatus)
+);
 
 /**
  * @route POST /manual-scan
