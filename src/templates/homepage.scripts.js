@@ -7,14 +7,12 @@ const utils = {
   formatNumber: (num) => Number(num).toLocaleString('en-IN'),
   
   formatDate: (dateStr) => {
-    // Handle null, undefined, or invalid dates
     if (!dateStr || dateStr === 'null' || dateStr === 'undefined') {
       return 'Invalid Date';
     }
     
     try {
       const date = new Date(dateStr);
-      // Check if date is valid
       if (isNaN(date.getTime())) {
         return 'Invalid Date';
       }
@@ -73,10 +71,15 @@ const customAlert = {
       details = null
     } = options;
 
-    const icon = type === 'success' 
-      ? '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>'
-      : '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
-    const iconClass = type === 'success' ? 'success' : 'error';
+const iconMap = {
+  success: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>',
+  error: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
+  info: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12.01" y2="16"></line><line x1="12" y1="8" x2="12" y2="12"></line></svg>'
+};
+
+const icon = iconMap[type] || iconMap.info;
+const iconClass = type;
+
 
     let detailsHtml = '';
     if (details && typeof details === 'object') {
@@ -208,7 +211,7 @@ const components = {
     return \`
       <div class="card" style="border:1px dashed #c7c8c8;">
         <div style="font-weight:600;">\${stock.stock_name || 'N/A'}</div>
-        <div style="color:#6366f1;font-size:12px;">\${stock.symbol || ''}</div>
+        <div style="color:#0ea5e9;font-size:12px;">\${stock.symbol || ''}</div>
         <div style="font-size:20px;font-weight:700;margin-top:6px;">
           ₹\${Number(stock.close || 0).toFixed(2)}
         </div>
@@ -232,9 +235,9 @@ const components = {
   
   emptyState: (icon, title, message) => \`
     <div class="card" style="text-align:center;padding:40px;">
-      <div style="margin-bottom:12px;display:inline-flex;color:#6b7280;">\${icon}</div>
+      <div style="margin-bottom:12px;display:inline-flex;color:#64748b;">\${icon}</div>
       <h3 style="margin:0 0 8px;">\${title}</h3>
-      <p style="color:#6b7280;">\${message}</p>
+      <p style="color:#64748b;">\${message}</p>
     </div>
   \`
 };
@@ -256,7 +259,6 @@ async function loadHealth() {
     ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>'
     : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
   
-  // Format uptime properly
   const uptimeSeconds = parseFloat(data.uptime) || 0;
   const uptimeMinutes = uptimeSeconds / 60;
   const uptimeHours = uptimeMinutes / 60;
@@ -268,7 +270,6 @@ async function loadHealth() {
     uptimeDisplay = \`\${uptimeMinutes.toFixed(1)} min\`;
   }
   
-  // Format memory properly
   const memoryBytes = parseFloat(data.memory) || 0;
   const memoryMB = memoryBytes / (1024 * 1024);
   const memoryGB = memoryMB / 1024;
@@ -281,21 +282,36 @@ async function loadHealth() {
   }
   
   dom.setContent(\`
-    <div class="card" style="background:\${bg};border:1px solid \${border};">
+    <div class="card health-card">
+    
       <div style="font-size:15px;font-weight:600;color:\${title};margin-bottom:10px;display:flex;align-items:center;gap:8px;">
         <span style="display:inline-flex;color:\${val};">\${statusIcon}</span>
         <span>System \${isUp ? 'Operational' : 'Attention Needed'}</span>
       </div>
       <table width="100%">
         <tr>
-          <td style="background:white;border-radius:12px;padding:10px;text-align:center;">
+          <td style="
+  background:#f8fafc;
+  border:1px dashed #e5e7eb;
+  border-radius:12px;
+  padding:12px;
+  text-align:center;
+">
+
             <div style="font-size:11.5px;color:#6b7280;">Uptime</div>
             <div style="font-size:16.5px;font-weight:700;color:\${val};">
               \${uptimeDisplay}
             </div>
           </td>
           <td width="12"></td>
-          <td style="background:white;border-radius:12px;padding:10px;text-align:center;">
+          <td style="
+  background:#f8fafc;
+  border:1px dashed #e5e7eb;
+  border-radius:12px;
+  padding:12px;
+  text-align:center;
+">
+
             <div style="font-size:11.5px;color:#6b7280;">Memory</div>
             <div style="font-size:16.5px;font-weight:700;color:\${val};">
               \${memoryDisplay}
@@ -306,29 +322,36 @@ async function loadHealth() {
     </div>
   \`);
 }
-
 async function loadMarketScan() {
   dom.setActive('scanBtn');
-  dom.showLoader(4);
+  dom.showLoader(3);
   await utils.sleep(350);
   
-  const [nifty, scanData] = await Promise.all([
-    api.get('/nifty-status'),
-    api.get('/test-scrape')
-  ]);
+  const scanData = await api.get('/test-scrape');
   
   dom.setContent('');
-  dom.addContent(components.niftyCard(nifty));
-  
-  const warning = !nifty.aboveEMA ? 'Market Bearish • Screening Paused' : '';
-  dom.addContent(components.countStrip(scanData.count || 0, warning));
-  
+
+  // ✅ Build nifty object safely
+  if (scanData.niftyData) {
+    const nifty = {
+      price: scanData.niftyData.currentPrice,
+      ema20: scanData.niftyData.ema20,
+      aboveEMA: scanData.niftyData.isAboveEMA
+    };
+
+    dom.addContent(components.niftyCard(nifty));
+  }
+
+  // ❌ keep count strip removed if you don’t want it
+  // dom.addContent(components.countStrip(scanData.count || 0, ''));
+
   const stocksHtml = (scanData.stocks || [])
     .map(components.stockCard)
     .join('');
   
   dom.addContent('<div class="stock-grid">' + stocksHtml + '</div>');
 }
+
 
 async function loadHistory() {
   dom.setActive('historyBtn');
@@ -340,17 +363,14 @@ async function loadHistory() {
   
   if (!data.success || !data.dates || data.dates.length === 0) {
     dom.addContent(components.emptyState(
-      '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>',
+      '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>',
       'No History Yet',
       'Run a scan to start building history'
     ));
     return;
   }
   
-  dom.addContent(components.countStrip(data.dates.length, '').replace('found today', \`scan\${data.dates.length === 1 ? '' : 's'}\`).replace('Showing last ', 'Showing last '));
-  
   const historyHtml = data.dates.map(d => {
-    // Validate that date exists and is not null
     if (!d.date) {
       console.warn('Invalid date in history item:', d);
       return '';
@@ -361,9 +381,7 @@ async function loadHistory() {
     const trendIcon = isUp
       ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>'
       : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>';
-    
-    const stockIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>';
-    
+        
     return \`
       <div class="history-item" onclick="loadHistoryDetail('\${d.date}')">
         <div class="history-header">
@@ -372,8 +390,7 @@ async function loadHistory() {
               <span>\${utils.formatDate(d.date)}</span>
             </div>
             <div class="history-stock-count">
-              <span style="display:inline-flex;">\${stockIcon}</span>
-              <span>\${d.count}</span>
+              <span>\${d.count} stock\${d.count !== 1 ? 's' : ''}</span>
             </div>
           </div>
         </div>
@@ -401,13 +418,12 @@ async function loadHistory() {
         </div>
       </div>
     \`;
-  }).filter(Boolean).join(''); // Filter out empty strings from invalid dates
+  }).filter(Boolean).join('');
   
   dom.addContent('<div>' + historyHtml + '</div>');
 }
 
 async function loadHistoryDetail(date) {
-  // Validate date parameter
   if (!date || date === 'null' || date === 'undefined') {
     dom.setContent(components.emptyState(
       '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>',
@@ -435,15 +451,12 @@ async function loadHistoryDetail(date) {
   \`);
   
   const nifty = { ...data.niftyData, price: data.niftyData?.currentPrice, ema20: data.niftyData?.ema20, aboveEMA: data.niftyData?.isAboveEMA };
-  dom.addContent(components.niftyCard(nifty));
-  dom.addContent(components.countStrip(data.stocks.length, '').replace('today', ''));
+
   
-  // Use the same history-item style for stocks detail view
   const stocksHtml = data.stocks.map(s => {
     const chg = parseFloat(s.per_chg) || 0;
     const isUp = chg >= 0;
     
-    // Calculate trading parameters
     const dayHigh = Number(s.dayHigh) || 0;
     const dayLow = Number(s.dayLow) || 0;
     const buyPrice = dayHigh > 0 ? dayHigh * 1.001 : 0;
@@ -454,18 +467,19 @@ async function loadHistoryDetail(date) {
       ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>'
       : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
     
-    const volumeIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>';
+    const volumeIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="6" height="16"></rect><rect x="9" y="8" width="6" height="12"></rect><rect x="17" y="2" width="6" height="18"></rect></svg>';
     
     return \`
-      <div class="history-item" style="cursor:default;margin-bottom:12px;">
+      <div class="history-item history-stock-card">
         <div class="history-header">
           <div class="history-date-row" style="margin-bottom:12px;">
             <div class="history-date" style="flex:1;">
-              <div style="font-weight:600;font-size:15px;color:#111827;">\${s.stock_name || 'N/A'}</div>
-              <div style="color:#6366f1;font-size:12px;font-weight:600;margin-top:2px;">\${s.symbol || ''}</div>
+              <div style="font-weight:600;font-size:15px;color:#020617;">\${s.stock_name || 'N/A'}</div>
+              <div style="color:#0ea5e9;font-size:12px;font-weight:600;margin-top:2px;">\${s.symbol || ''}</div>
             </div>
             <div style="text-align:right;">
-              <div style="font-size:20px;font-weight:700;color:#111827;">₹\${Number(s.close || 0).toFixed(2)}</div>
+              <div style="font-size:22px;font-weight:800;color:#020617;">
+₹\${Number(s.close || 0).toFixed(2)}</div>
               <div style="font-size:13px;font-weight:700;color:\${isUp ? '#16a34a' : '#dc2626'};display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:2px;">
                 <span style="display:inline-flex;">\${changeIcon}</span>
                 <span>\${isUp ? '+' : ''}\${chg.toFixed(2)}%</span>
@@ -522,7 +536,26 @@ async function loadHistoryDetail(date) {
   dom.addContent('<div>' + stocksHtml + '</div>');
 }
 
+function isScanAllowedNow() {
+  const now = new Date();
+  const hour = now.getHours();
+  return hour >= 16 && hour < 23;
+}
+
 async function runManualScan() {
+  if (!isScanAllowedNow()) {
+    customAlert.show({
+      type: 'info',
+      title: 'Scan Not Allowed at This Time',
+      message:
+        'Market scans can only be run after market close, once prices are settled.',
+      details: {
+        'Allowed Time Window': '4:00 PM – 11:00 PM IST',
+      }
+    });
+    return;
+  }
+
   const btn = dom.get('manualScanBtn');
   btn.disabled = true;
   btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;animation:spin 1s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>Running...';
