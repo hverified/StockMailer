@@ -109,11 +109,6 @@ button.secondary.active::after {
   width:100%;
 }
 
-button.secondary:hover::after {
-  width:40%;
-}
-
-
 button:disabled {
   opacity:0.5;
   cursor:not-allowed;
