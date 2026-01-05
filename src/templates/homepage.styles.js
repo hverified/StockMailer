@@ -176,10 +176,14 @@ a.docs:hover {
 }
 
 .history-header {
+  margin-bottom:12px;
+}
+
+.history-date-row {
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-bottom:12px;
+  width:100%;
 }
 
 .history-date {

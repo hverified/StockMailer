@@ -367,12 +367,14 @@ async function loadHistory() {
     return \`
       <div class="history-item" onclick="loadHistoryDetail('\${d.date}')">
         <div class="history-header">
-          <div class="history-date">
-            <span>\${utils.formatDate(d.date)}</span>
-          </div>
-          <div class="history-stock-count">
-            <span style="display:inline-flex;">\${stockIcon}</span>
-            <span>\${d.count} stock\${d.count === 1 ? '' : 's'}</span>
+          <div class="history-date-row">
+            <div class="history-date">
+              <span>\${utils.formatDate(d.date)}</span>
+            </div>
+            <div class="history-stock-count">
+              <span style="display:inline-flex;">\${stockIcon}</span>
+              <span>\${d.count}</span>
+            </div>
           </div>
         </div>
         
@@ -436,8 +438,59 @@ async function loadHistoryDetail(date) {
   dom.addContent(components.niftyCard(nifty));
   dom.addContent(components.countStrip(data.stocks.length, '').replace('today', ''));
   
-  const stocksHtml = data.stocks.map(components.stockCard).join('');
-  dom.addContent('<div class="stock-grid">' + stocksHtml + '</div>');
+  // Use the same history-item style for stocks detail view
+  const stocksHtml = data.stocks.map(s => {
+    const chg = parseFloat(s.per_chg) || 0;
+    const isUp = chg >= 0;
+    
+    const changeIcon = isUp
+      ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>'
+      : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+    
+    const volumeIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>';
+    
+    return \`
+      <div class="history-item" style="cursor:default;margin-bottom:12px;">
+        <div class="history-header">
+          <div class="history-date-row" style="margin-bottom:12px;">
+            <div class="history-date" style="flex:1;">
+              <div style="font-weight:600;font-size:15px;color:#111827;">\${s.stock_name || 'N/A'}</div>
+              <div style="color:#6366f1;font-size:12px;font-weight:600;margin-top:2px;">\${s.symbol || ''}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:20px;font-weight:700;color:#111827;">₹\${Number(s.close || 0).toFixed(2)}</div>
+              <div style="font-size:13px;font-weight:700;color:\${isUp ? '#16a34a' : '#dc2626'};display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:2px;">
+                <span style="display:inline-flex;">\${changeIcon}</span>
+                <span>\${isUp ? '+' : ''}\${chg.toFixed(2)}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="history-stats">
+          <div class="history-stat">
+            <div class="history-stat-label">Day High</div>
+            <div class="history-stat-value">₹\${s.dayHigh ? Number(s.dayHigh).toFixed(2) : 'N/A'}</div>
+          </div>
+          
+          <div class="history-stat">
+            <div class="history-stat-label">Volume</div>
+            <div class="history-stat-value" style="display:flex;align-items:center;justify-content:center;gap:4px;">
+              <span style="display:inline-flex;color:#6b7280;">\${volumeIcon}</span>
+              <span>\${s.volume ? utils.formatNumber(s.volume) : '—'}</span>
+            </div>
+          </div>
+          
+          <div class="history-stat">
+            <div class="history-stat-label">BSE Code</div>
+            <div class="history-stat-value">\${s.bsecode || 'N/A'}</div>
+          </div>
+        </div>
+      </div>
+    \`;
+  }).join('');
+  
+  dom.addContent('<div>' + stocksHtml + '</div>');
 }
 
 async function runManualScan() {
