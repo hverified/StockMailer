@@ -2,7 +2,7 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 const config = require("../config/app.config");
 const logger = require("../utils/logger");
-const helpers = require("../utils/helpers");
+const DateUtil = require("../utils/date.util");
 
 class ChartinkScraper {
   constructor() {
@@ -93,8 +93,11 @@ class ChartinkScraper {
         throw new Error(`Chartink API Error: ${response.data.message}`);
       }
 
+      const currentDate = DateUtil.getCurrentDate();
+      const timestamp = new Date();
+
       const stocks = (response.data.data || []).map((row) => ({
-        id: helpers.generateId(),
+        id: DateUtil.generateTimestampId(),
         stock_name: row.name,
         symbol: row.nsecode,
         bsecode: row.bsecode,
@@ -102,7 +105,9 @@ class ChartinkScraper {
         close: row.close,
         volume: row.volume,
         status: "shortlisted",
-        shortlisted_date: helpers.currentDate(),
+        shortlisted_date: currentDate,
+        scannedDate: currentDate, // Explicitly set scannedDate
+        timestamp: timestamp, // Add timestamp
       }));
 
       logger.info(`Successfully scraped ${stocks.length} stocks from Chartink`);

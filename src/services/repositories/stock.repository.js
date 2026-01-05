@@ -6,6 +6,7 @@
  */
 
 const logger = require("../../utils/logger");
+const DateUtil = require("../../utils/date.util");
 const { DatabaseError } = require("../../middleware/error-handler.middleware");
 
 class StockRepository {
@@ -38,36 +39,47 @@ class StockRepository {
         return { upsertedCount: 0, modifiedCount: 0 };
       }
 
-      const operations = stocks.map((stock) => ({
-        updateOne: {
-          filter: {
-            symbol: stock.symbol,
-            scannedDate: stock.scannedDate,
-          },
-          update: {
-            $set: {
-              ...stock,
-              niftyData: {
-                currentPrice: niftyData.currentPrice,
-                ema20: niftyData.ema20,
-                isAboveEMA: niftyData.isAboveEMA,
+      const currentDate = DateUtil.getCurrentDate();
+      const timestamp = new Date();
+
+      const operations = stocks.map((stock) => {
+        // Ensure scannedDate is set
+        const scannedDate =
+          stock.scannedDate || stock.shortlisted_date || currentDate;
+
+        return {
+          updateOne: {
+            filter: {
+              symbol: stock.symbol,
+              scannedDate: scannedDate,
+            },
+            update: {
+              $set: {
+                ...stock,
+                scannedDate: scannedDate, // Ensure it's always set
+                timestamp: timestamp,
+                niftyData: {
+                  currentPrice: niftyData.currentPrice,
+                  ema20: niftyData.ema20,
+                  isAboveEMA: niftyData.isAboveEMA,
+                },
+                updatedAt: timestamp,
               },
-              updatedAt: new Date(),
+              $setOnInsert: {
+                createdAt: timestamp,
+              },
             },
-            $setOnInsert: {
-              createdAt: new Date(),
-            },
+            upsert: true,
           },
-          upsert: true,
-        },
-      }));
+        };
+      });
 
       const result = await this._getCollection().bulkWrite(operations);
 
       logger.info(
         `Saved ${
           result.upsertedCount + result.modifiedCount
-        } stocks to database`
+        } stocks to database for date: ${currentDate}`
       );
 
       return result;
@@ -126,6 +138,12 @@ class StockRepository {
       const dates = await this._getCollection()
         .aggregate([
           {
+            // Filter out documents with null or missing scannedDate
+            $match: {
+              scannedDate: { $ne: null, $exists: true },
+            },
+          },
+          {
             $group: {
               _id: "$scannedDate",
               count: { $sum: 1 },
@@ -163,7 +181,10 @@ class StockRepository {
   async getStockHistory(symbol, limit = 10) {
     try {
       const history = await this._getCollection()
-        .find({ symbol: symbol.toUpperCase() })
+        .find({
+          symbol: symbol.toUpperCase(),
+          scannedDate: { $ne: null, $exists: true }, // Filter out null dates
+        })
         .sort({ scannedDate: -1 })
         .limit(limit)
         .toArray();
@@ -241,6 +262,65 @@ class StockRepository {
   }
 
   /**
+   * Fix null scannedDate records
+   * Updates all records with null scannedDate to use their timestamp date
+   * @returns {Promise<number>} Number of fixed documents
+   */
+  async fixNullScannedDates() {
+    try {
+      // Find all documents with null or missing scannedDate
+      const nullDateDocs = await this._getCollection()
+        .find({
+          $or: [{ scannedDate: null }, { scannedDate: { $exists: false } }],
+        })
+        .toArray();
+
+      if (nullDateDocs.length === 0) {
+        logger.info("No null scannedDate records found");
+        return 0;
+      }
+
+      logger.info(`Found ${nullDateDocs.length} records with null scannedDate`);
+
+      const operations = nullDateDocs.map((doc) => {
+        // Try to derive date from timestamp, shortlisted_date, or use current date
+        let derivedDate;
+
+        if (doc.timestamp) {
+          derivedDate = new Date(doc.timestamp).toISOString().split("T")[0];
+        } else if (doc.shortlisted_date) {
+          derivedDate = doc.shortlisted_date;
+        } else {
+          derivedDate = DateUtil.getCurrentDate();
+        }
+
+        return {
+          updateOne: {
+            filter: { _id: doc._id },
+            update: {
+              $set: {
+                scannedDate: derivedDate,
+                timestamp: doc.timestamp || new Date(),
+              },
+            },
+          },
+        };
+      });
+
+      const result = await this._getCollection().bulkWrite(operations);
+
+      logger.info(
+        `Fixed ${result.modifiedCount} records with null scannedDate`
+      );
+
+      return result.modifiedCount;
+    } catch (error) {
+      logger.error("Failed to fix null scannedDate records:", error);
+      throw new DatabaseError(`Failed to fix null dates: ${error.message}`);
+    }
+  }
+
+  /**
    * Count total stocks in database
    * @returns {Promise<number>} Total count
    */
@@ -260,7 +340,7 @@ class StockRepository {
   async getLatestScanDate() {
     try {
       const latest = await this._getCollection()
-        .find({})
+        .find({ scannedDate: { $ne: null, $exists: true } })
         .sort({ scannedDate: -1 })
         .limit(1)
         .toArray();
