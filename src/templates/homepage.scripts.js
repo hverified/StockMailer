@@ -327,29 +327,40 @@ async function loadMarketScan() {
   dom.showLoader(3);
   await utils.sleep(350);
   
-  const scanData = await api.get('/test-scrape');
-  
-  dom.setContent('');
+  try {
+    // Fetch Nifty data first
+    const niftyResponse = await api.get('/nifty-status');
+    const scanData = await api.get('/test-scrape');
+    
+    dom.setContent('');
 
-  // ✅ Build nifty object safely
-  if (scanData.niftyData) {
+    // Always show Nifty card
     const nifty = {
-      price: scanData.niftyData.currentPrice,
-      ema20: scanData.niftyData.ema20,
-      aboveEMA: scanData.niftyData.isAboveEMA
+      price: niftyResponse.price,
+      ema20: niftyResponse.ema20,
+      aboveEMA: niftyResponse.aboveEMA
     };
-
     dom.addContent(components.niftyCard(nifty));
+
+    // Show stocks if available, otherwise show empty state
+    if (scanData.stocks && scanData.stocks.length > 0) {
+      const stocksHtml = scanData.stocks.map(components.stockCard).join('');
+      dom.addContent('<div class="stock-grid">' + stocksHtml + '</div>');
+    } else {
+      dom.addContent(components.emptyState(
+        '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>',
+        'No Stocks Shortlisted',
+        'No stocks meet the criteria at this time.'
+      ));
+    }
+  } catch (error) {
+    console.error('Error loading market scan:', error);
+    dom.setContent(components.emptyState(
+      '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>',
+      'Error Loading Data',
+      'Failed to fetch market data. Please try again.'
+    ));
   }
-
-  // ❌ keep count strip removed if you don’t want it
-  // dom.addContent(components.countStrip(scanData.count || 0, ''));
-
-  const stocksHtml = (scanData.stocks || [])
-    .map(components.stockCard)
-    .join('');
-  
-  dom.addContent('<div class="stock-grid">' + stocksHtml + '</div>');
 }
 
 
