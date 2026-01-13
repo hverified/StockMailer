@@ -569,6 +569,40 @@ a.docs:hover {
   border:1px dashed #e5e7eb;
 }
 
+.icon {
+  width: 16px;
+  height: 16px;
+  display: block;              
+  flex-shrink: 0;           
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Minimal hover – no transform */
+button:hover .icon {
+  opacity: 0.85;
+}
+
+/* REMOVE animation completely */
+button.active .icon-history {
+  opacity: 1;
+}
+
+button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+button span {
+  line-height: 1.1;
+}
+
+
 .history-stock-card .history-stat:hover {
   background:#f1f5f9;
   transform:scale(1.03);
