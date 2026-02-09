@@ -8,7 +8,6 @@ const StockDBService = require("../services/stock.db.service");
 const logger = require("../utils/logger");
 const DateUtil = require("../utils/date.util");
 const {
-  asyncHandler,
   ValidationError,
   NotFoundError,
 } = require("../middleware/error-handler.middleware");

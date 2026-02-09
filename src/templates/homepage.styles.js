@@ -231,16 +231,6 @@ a.docs:hover {
   gap:14px;
 }
 
-.count-strip {
-  background:#f8fafc;
-  border:1px solid #dbe3f0;
-  border-radius:12px;
-  padding:10px 12px;
-  font-size:13px;
-  font-weight:600;
-  color:#1e3a8a;
-}
-
 .history-item {
   background:var(--surface);
   border-radius:14px;

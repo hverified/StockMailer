@@ -243,65 +243,11 @@ const components = {
     \`;
   },
   
-  countStrip: (count, warning = '') => \`
-    <div class="count-strip">
-      \${count} stock\${count === 1 ? '' : 's'} \${warning ? 'matched' : 'found'} today
-      \${warning ? \`<br><small style="color:#991b1b;font-size:12px;">\${warning}</small>\` : ''}
-    </div>
-  \`,
-  
   emptyState: (icon, title, message) => \`
     <div class="card" style="text-align:center;padding:40px;">
       <div style="margin-bottom:12px;display:inline-flex;color:#64748b;">\${icon}</div>
       <h3 style="margin:0 0 8px;">\${title}</h3>
       <p style="color:#64748b;">\${message}</p>
-    </div>
-  \`,
-
-  outcomeReport: (report) => \`
-    <div class="report-wrap">
-      <div class="report-header">
-        <h3>Stocks Report</h3>
-        <span>\${utils.formatDate(report.date)}</span>
-      </div>
-      <div class="report-grid">
-        <div class="report-card">
-          <div class="report-label">Total Shortlisted</div>
-          <div class="report-value">\${report.totalShortlisted}</div>
-        </div>
-        <div class="report-card">
-          <div class="report-label">Triggered</div>
-          <div class="report-value">\${report.triggered}</div>
-        </div>
-        <div class="report-card">
-          <div class="report-label">Not Triggered</div>
-          <div class="report-value">\${report.notTriggered}</div>
-        </div>
-        <div class="report-card">
-          <div class="report-label">Profit</div>
-          <div class="report-value positive">\${report.profits}</div>
-        </div>
-        <div class="report-card">
-          <div class="report-label">Loss</div>
-          <div class="report-value negative">\${report.losses}</div>
-        </div>
-        <div class="report-card">
-          <div class="report-label">Open Triggered Trades</div>
-          <div class="report-value">\${report.openTriggeredTrades}</div>
-        </div>
-        <div class="report-card">
-          <div class="report-label">Trigger Rate</div>
-          <div class="report-value">\${Number(report.triggerRate || 0).toFixed(2)}%</div>
-        </div>
-        <div class="report-card">
-          <div class="report-label">Win Rate</div>
-          <div class="report-value">\${Number(report.winRate || 0).toFixed(2)}%</div>
-        </div>
-        <div class="report-card">
-          <div class="report-label">Avg % Change</div>
-          <div class="report-value">\${Number(report.avgChange || 0).toFixed(2)}%</div>
-        </div>
-      </div>
     </div>
   \`,
 
