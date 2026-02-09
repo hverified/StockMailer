@@ -6,6 +6,8 @@ const css = `
   --bg:#f3f5f8;
   --surface:#ffffff;
   --surface-soft:#f8fafc;
+  --surface-blue:#f7fbff;
+  --surface-mint:#f7fdfb;
   --text:#0f172a;
   --muted:#5f6f86;
   --accent:#1d4ed8;
@@ -49,6 +51,7 @@ body {
   font-weight:700;
   letter-spacing:-0.04em;
   margin:0;
+  color:#0b1b33;
 }
 
 .header .date {
@@ -56,6 +59,17 @@ body {
   font-weight:600;
   color:var(--muted);
   letter-spacing:0.01em;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+
+.header .date::before {
+  content:'';
+  width:22px;
+  height:2px;
+  border-radius:999px;
+  background:linear-gradient(90deg, #60a5fa, #34d399);
 }
 
 .actions {
@@ -65,7 +79,8 @@ body {
   align-items:stretch;
   margin:26px 0;
   padding:10px;
-  background:rgba(255, 255, 255, 0.75);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(247, 251, 255, 0.82));
   border:1px solid var(--border);
   border-radius:14px;
   box-shadow:var(--shadow-sm);
@@ -286,7 +301,7 @@ a.docs:hover {
 }
 
 .history-item {
-  background:var(--surface);
+  background:linear-gradient(180deg, var(--surface) 0%, var(--surface-blue) 100%);
   border-radius:14px;
   padding:18px;
   margin-bottom:16px;
@@ -413,7 +428,7 @@ a.docs:hover {
 }
 
 .report-wrap {
-  background:var(--surface);
+  background:linear-gradient(180deg, var(--surface) 0%, var(--surface-blue) 100%);
   border:1px solid var(--border);
   border-radius:14px;
   padding:16px;
@@ -500,7 +515,7 @@ a.docs:hover {
 }
 
 .report-table th {
-  background:#f8fafc;
+  background:linear-gradient(180deg, #f8fafc 0%, #eef4fc 100%);
   color:#475569;
   font-weight:700;
   font-size:12px;
@@ -652,6 +667,21 @@ a.docs:hover {
 .history-stock-card .history-stats.trade-levels .history-stat:nth-child(3) {
   background:linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
   border-color:#bbf7d0;
+}
+
+.history-stock-card .history-stats.day-metrics .history-stat:nth-child(1) {
+  background:linear-gradient(180deg, #fefce8 0%, #fef9c3 100%);
+  border-color:#fde68a;
+}
+
+.history-stock-card .history-stats.day-metrics .history-stat:nth-child(2) {
+  background:linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
+  border-color:#fed7aa;
+}
+
+.history-stock-card .history-stats.day-metrics .history-stat:nth-child(3) {
+  background:linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+  border-color:#bfdbfe;
 }
 
 .history-stock-card .history-stat {
@@ -1132,6 +1162,23 @@ a.docs:hover {
 
   .history-stock-card .history-stats {
     grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+
+  .history-stock-card .history-stats.day-metrics {
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+  }
+
+  .history-stock-card .history-stats.day-metrics .history-stat {
+    padding:6px 3px;
+  }
+
+  .history-stock-card .history-stats.day-metrics .history-stat-label {
+    font-size:9px;
+    letter-spacing:0.25px;
+  }
+
+  .history-stock-card .history-stats.day-metrics .history-stat-value {
+    font-size:12px;
   }
 
   .history-stock-card .history-stats.trade-levels {

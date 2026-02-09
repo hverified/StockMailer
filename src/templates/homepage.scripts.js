@@ -601,7 +601,7 @@ async function loadHistoryDetail(date) {
           </button>
         </div>
         
-        <div class="history-stats">
+        <div class="history-stats day-metrics">
           <div class="history-stat">
             <div class="history-stat-label">Day High</div>
             <div class="history-stat-value">₹\${dayHigh > 0 ? dayHigh.toFixed(2) : 'N/A'}</div>
