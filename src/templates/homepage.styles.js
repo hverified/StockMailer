@@ -418,13 +418,32 @@ a.docs:hover {
 .history-stock-count {
   display:inline-flex;
   align-items:center;
-  gap:6px;
-  padding:6px 12px;
-  background:#1e3a8a;
-  color:white;
+  justify-content:center;
+  min-height:auto;
+  padding:0;
+  background:transparent;
+  border:none;
+}
+
+.stock-count-dots {
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+}
+
+.stock-count-dot {
+  width:12px;
+  height:12px;
   border-radius:999px;
-  font-size:13px;
-  font-weight:600;
+  background:linear-gradient(180deg, #60a5fa 0%, #2563eb 100%);
+  box-shadow:0 1px 3px rgba(37, 99, 235, 0.28);
+}
+
+.stock-count-extra {
+  margin-left:3px;
+  font-size:11px;
+  font-weight:700;
+  color:#1e3a8a;
 }
 
 .report-wrap {
@@ -1110,8 +1129,17 @@ a.docs:hover {
   }
   
   .history-stock-count {
-    font-size:12px;
-    padding:4px 10px;
+    padding:0;
+    min-height:auto;
+  }
+
+  .stock-count-dot {
+    width:10px;
+    height:10px;
+  }
+
+  .stock-count-dots {
+    gap:4px;
   }
 
   /* History → Stock Detail Cards */

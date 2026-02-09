@@ -454,6 +454,18 @@ async function loadHistory() {
     const trendIcon = isUp
       ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>'
       : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>';
+
+    const stockCount = Number(d.count) || 0;
+    const dotLimit = 12;
+    const visibleDots = Math.min(stockCount, dotLimit);
+    const dotsHtml = Array.from(
+      { length: visibleDots },
+      () => '<span class="stock-count-dot"></span>'
+    ).join('');
+    const extraDotsHtml =
+      stockCount > dotLimit
+        ? \`<span class="stock-count-extra">+\${stockCount - dotLimit}</span>\`
+        : '';
         
     return \`
       <div class="history-item" onclick="loadHistoryDetail('\${d.date}')">
@@ -462,8 +474,11 @@ async function loadHistory() {
             <div class="history-date">
               <span>\${utils.formatDate(d.date)}</span>
             </div>
-            <div class="history-stock-count">
-              <span>\${d.count} stock\${d.count !== 1 ? 's' : ''}</span>
+            <div class="history-stock-count" title="\${stockCount} stock\${stockCount !== 1 ? 's' : ''}">
+              <div class="stock-count-dots">
+                \${dotsHtml}
+                \${extraDotsHtml}
+              </div>
             </div>
           </div>
         </div>
