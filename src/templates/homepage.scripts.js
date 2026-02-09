@@ -192,22 +192,22 @@ const components = {
     
     return \`
       <div class="card" style="background:\${bg};border:1px solid \${border};">
-        <div style="font-size:15px;font-weight:600;color:\${title};margin-bottom:10px;display:flex;align-items:center;gap:8px;">
-          <span style="display:inline-flex;color:\${val};">\${trendIcon}</span>
+        <div class="nifty-status-line" style="color:\${title};">
+          <span class="inline-icon" style="color:\${val};">\${trendIcon}</span>
           <span>Nifty \${isUp ? 'Above' : 'Below'} 20 EMA</span>
         </div>
         <table width="100%">
           <tr>
-            <td style="background:white;border-radius:12px;padding:10px;text-align:center;">
-              <div style="font-size:11.5px;color:#6b7280;">Current</div>
-              <div style="font-size:16.5px;font-weight:700;color:\${val};">
+            <td class="nifty-stat-cell">
+              <div class="nifty-stat-label">Current</div>
+              <div class="nifty-stat-value" style="color:\${val};">
                 ₹\${Number(nifty.price).toFixed(2)}
               </div>
             </td>
             <td width="12"></td>
-            <td style="background:white;border-radius:12px;padding:10px;text-align:center;">
-              <div style="font-size:11.5px;color:#6b7280;">20 EMA</div>
-              <div style="font-size:16.5px;font-weight:700;color:\${val};">
+            <td class="nifty-stat-cell">
+              <div class="nifty-stat-label">20 EMA</div>
+              <div class="nifty-stat-value" style="color:\${val};">
                 ₹\${Number(nifty.ema20).toFixed(2)}
               </div>
             </td>
@@ -226,17 +226,17 @@ const components = {
       : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
     
     return \`
-      <div class="card" style="border:1px dashed #c7c8c8;">
-        <div style="font-weight:600;">\${stock.stock_name || 'N/A'}</div>
-        <div style="color:#0ea5e9;font-size:12px;">\${stock.symbol || ''}</div>
-        <div style="font-size:20px;font-weight:700;margin-top:6px;">
+      <div class="card market-stock-card">
+        <div class="market-stock-name">\${stock.stock_name || 'N/A'}</div>
+        <div class="market-stock-symbol">\${stock.symbol || ''}</div>
+        <div class="market-stock-price">
           ₹\${Number(stock.close || 0).toFixed(2)}
         </div>
-        <div style="font-size:13px;font-weight:700;color:\${isUp ? '#16a34a' : '#dc2626'};display:flex;align-items:center;gap:4px;margin-top:3px;">
-          <span style="display:inline-flex;">\${changeIcon}</span>
+        <div class="market-stock-change" style="color:\${isUp ? '#16a34a' : '#dc2626'};">
+          <span class="inline-icon">\${changeIcon}</span>
           <span>\${isUp ? '+' : ''}\${chg.toFixed(2)}%</span>
         </div>
-        <div style="font-size:13px;margin-top:6px;">
+        <div class="market-stock-volume">
           Volume: \${stock.volume ? utils.formatNumber(stock.volume) : '—'}
         </div>
       </div>
@@ -244,10 +244,10 @@ const components = {
   },
   
   emptyState: (icon, title, message) => \`
-    <div class="card" style="text-align:center;padding:40px;">
-      <div style="margin-bottom:12px;display:inline-flex;color:#64748b;">\${icon}</div>
-      <h3 style="margin:0 0 8px;">\${title}</h3>
-      <p style="color:#64748b;">\${message}</p>
+    <div class="card empty-state">
+      <div class="empty-state-icon">\${icon}</div>
+      <h3 class="empty-state-title">\${title}</h3>
+      <p class="empty-state-message">\${message}</p>
     </div>
   \`,
 
@@ -262,11 +262,11 @@ const components = {
           <td>\${day.totalShortlisted || 0}</td>
           <td>\${day.triggered || 0}</td>
           <td>\${day.notTriggered || 0}</td>
-          <td style="color:#15803d;font-weight:700;">\${day.profits || 0}</td>
-          <td style="color:#b91c1c;font-weight:700;">\${day.losses || 0}</td>
+          <td class="report-profit-cell">\${day.profits || 0}</td>
+          <td class="report-loss-cell">\${day.losses || 0}</td>
         </tr>
       \`).join('')
-      : '<tr><td colspan="6" style="text-align:center;color:#64748b;">No report data available yet.</td></tr>';
+      : '<tr><td colspan="6" class="report-empty-cell">No report data available yet.</td></tr>';
 
     return \`
       <div class="report-wrap">
@@ -360,36 +360,22 @@ async function loadHealth() {
   dom.setContent(\`
     <div class="card health-card">
     
-      <div style="font-size:15px;font-weight:600;color:\${title};margin-bottom:10px;display:flex;align-items:center;gap:8px;">
-        <span style="display:inline-flex;color:\${val};">\${statusIcon}</span>
+      <div class="health-status-line" style="color:\${title};">
+        <span class="inline-icon" style="color:\${val};">\${statusIcon}</span>
         <span>System \${isUp ? 'Operational' : 'Attention Needed'}</span>
       </div>
       <table width="100%">
         <tr>
-          <td style="
-  background:#f8fafc;
-  border:1px dashed #e5e7eb;
-  border-radius:12px;
-  padding:12px;
-  text-align:center;
-">
-
-            <div style="font-size:11.5px;color:#6b7280;">Uptime</div>
-            <div style="font-size:16.5px;font-weight:700;color:\${val};">
+          <td class="health-stat-cell">
+            <div class="health-stat-label">Uptime</div>
+            <div class="health-stat-value" style="color:\${val};">
               \${uptimeDisplay}
             </div>
           </td>
           <td width="12"></td>
-          <td style="
-  background:#f8fafc;
-  border:1px dashed #e5e7eb;
-  border-radius:12px;
-  padding:12px;
-  text-align:center;
-">
-
-            <div style="font-size:11.5px;color:#6b7280;">Memory</div>
-            <div style="font-size:16.5px;font-weight:700;color:\${val};">
+          <td class="health-stat-cell">
+            <div class="health-stat-label">Memory</div>
+            <div class="health-stat-value" style="color:\${val};">
               \${memoryDisplay}
             </div>
           </td>
@@ -486,9 +472,11 @@ async function loadHistory() {
           <div class="history-stat">
             <div class="history-stat-label">Status</div>
             <div class="history-stat-value">
-              <span class="history-badge \${!isUp ? 'bearish' : ''}" style="display:inline-flex;align-items:center;gap:4px;">
-                <span style="display:inline-flex;">\${trendIcon}</span>
+              <span class="history-badge \${!isUp ? 'bearish' : ''}">
+                <span class="history-badge-content">
+                  <span class="inline-icon">\${trendIcon}</span>
                 <span>\${isUp ? 'Bullish' : 'Bearish'}</span>
+                </span>
               </span>
             </div>
           </div>
@@ -532,8 +520,8 @@ async function loadHistoryDetail(date) {
   }
   
   dom.addContent(\`
-    <div style="margin-bottom:16px;">
-      <button onclick="loadHistory()" style="padding:8px 16px;border-radius:8px;">← Back to History</button>
+    <div class="history-detail-header">
+      <button class="history-back-btn" onclick="loadHistory()">← Back to History</button>
     </div>
   \`);
 
@@ -568,10 +556,10 @@ async function loadHistoryDetail(date) {
     return \`
       <div class="history-item history-stock-card \${hasOutcome ? 'is-marked' : ''} \${toneClass}" onclick="selectStockCard(this)" data-symbol="\${s.symbol || ''}">
         <div class="history-header">
-          <div class="history-date-row" style="margin-bottom:12px;">
-            <div class="history-date" style="flex:1;">
-              <div style="font-weight:600;font-size:15px;color:#020617;">\${s.stock_name || 'N/A'}</div>
-              <div style="color:#1d4ed8;font-size:12px;font-weight:600;margin-top:2px;">\${s.symbol || ''}</div>
+          <div class="history-date-row history-stock-header">
+            <div class="history-date">
+              <div class="stock-meta-name">\${s.stock_name || 'N/A'}</div>
+              <div class="stock-meta-symbol">\${s.symbol || ''}</div>
               <div class="outcome-summary">
                 <span class="status-badge \${triggeredStatus === 'triggered' ? 'triggered' : triggeredStatus === 'not_triggered' ? 'not-triggered' : 'muted'}">
                   \${triggeredStatus === 'triggered' ? 'Entry: Triggered' : triggeredStatus === 'not_triggered' ? 'Entry: Not Triggered' : 'Entry: Pending'}
@@ -587,7 +575,7 @@ async function loadHistoryDetail(date) {
               <div class="stock-price-value">
 ₹\${Number(s.close || 0).toFixed(2)}</div>
               <div class="stock-change-line" style="color:\${isUp ? '#16a34a' : '#dc2626'};">
-                <span style="display:inline-flex;">\${changeIcon}</span>
+                <span class="inline-icon">\${changeIcon}</span>
                 <span>\${isUp ? '+' : ''}\${chg.toFixed(2)}%</span>
               </div>
             </div>
@@ -613,7 +601,7 @@ async function loadHistoryDetail(date) {
           </button>
         </div>
         
-        <div class="history-stats" style="grid-template-columns:repeat(3, 1fr);">
+        <div class="history-stats">
           <div class="history-stat">
             <div class="history-stat-label">Day High</div>
             <div class="history-stat-value">₹\${dayHigh > 0 ? dayHigh.toFixed(2) : 'N/A'}</div>
@@ -626,30 +614,30 @@ async function loadHistoryDetail(date) {
           
           <div class="history-stat">
             <div class="history-stat-label">Volume</div>
-            <div class="history-stat-value" style="display:flex;align-items:center;justify-content:center;gap:4px;">
+            <div class="history-stat-value stat-value-inline">
               <span>\${s.volume ? utils.formatNumber(s.volume) : '—'}</span>
             </div>
           </div>
         </div>
         
-        <div class="history-stats">
+        <div class="history-stats trade-levels">
           <div class="history-stat">
-            <div class="history-stat-label">Buy At</div>
-            <div class="history-stat-value" style="display:flex;align-items:center;justify-content:center;gap:4px;">
+            <div class="history-stat-label">Buy</div>
+            <div class="history-stat-value stat-value-inline">
               <span>₹\${buyPrice > 0 ? buyPrice.toFixed(2) : 'N/A'}</span>
             </div>
           </div>
           
           <div class="history-stat" >
-            <div class="history-stat-label">Stoploss</div>
-            <div class="history-stat-value" style="display:flex;align-items:center;justify-content:center;gap:4px;">
+            <div class="history-stat-label">SL</div>
+            <div class="history-stat-value stat-value-inline">
               <span>₹\${stoploss > 0 ? stoploss.toFixed(2) : 'N/A'}</span>
             </div>
           </div>
           
           <div class="history-stat">
             <div class="history-stat-label">Target</div>
-            <div class="history-stat-value" style="display:flex;align-items:center;justify-content:center;gap:4px;">
+            <div class="history-stat-value stat-value-inline">
               <span>₹\${target > 0 ? target.toFixed(2) : 'N/A'}</span>
             </div>
           </div>
@@ -746,7 +734,7 @@ async function runManualScan() {
 
   const btn = dom.get('manualScanBtn');
   btn.disabled = true;
-  btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;animation:spin 1s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>Running...';
+  btn.innerHTML = '<svg class="inline-icon-run inline-icon-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>Running...';
   
   try {
     const data = await api.post('/manual-scan');
@@ -760,8 +748,8 @@ async function runManualScan() {
           'Stocks Found': data.stocksScraped,
           'Stocks Saved': data.stocksSaved,
           'Nifty Status': data.niftyData?.isAboveEMA 
-            ? '<span style="display:inline-flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg> Above EMA</span>' 
-            : '<span style="display:inline-flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg> Below EMA</span>',
+            ? '<span class="history-badge-content"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg> Above EMA</span>' 
+            : '<span class="history-badge-content"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg> Below EMA</span>',
           'Nifty Price': '₹' + data.niftyData?.currentPrice?.toFixed(2)
         }
       });
@@ -783,7 +771,7 @@ async function runManualScan() {
     });
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>Run Scan';
+    btn.innerHTML = '<svg class="inline-icon-run" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>Run Scan';
   }
 }
 
