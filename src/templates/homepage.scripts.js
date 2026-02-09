@@ -646,7 +646,7 @@ async function loadHistoryDetail(date) {
     \`;
   }).join('');
   
-  dom.addContent('<div>' + stocksHtml + '</div>');
+  dom.addContent('<div class="history-detail-list">' + stocksHtml + '</div>');
 }
 
 async function loadStocksReport() {

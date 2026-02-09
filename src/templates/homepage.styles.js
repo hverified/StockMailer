@@ -841,11 +841,17 @@ a.docs:hover {
 
 .history-detail-header {
   margin-bottom:16px;
+  grid-column:1 / -1;
 }
 
 .history-back-btn {
   padding:8px 16px;
   border-radius:8px;
+}
+
+.history-detail-list {
+  grid-column:1 / -1;
+  width:100%;
 }
 
 .nifty-status-line {
