@@ -1,6 +1,12 @@
 const styles = require("./homepage.styles");
 const scripts = require("./homepage.scripts");
-const { iconHistory, iconSearch, iconHealth, iconPlay } = require("./icons");
+const {
+  iconHistory,
+  iconSearch,
+  iconHealth,
+  iconPlay,
+  iconReport,
+} = require("./icons");
 
 function generate() {
   return `<!DOCTYPE html>
@@ -34,6 +40,11 @@ function generate() {
         <button class="secondary" id="healthBtn" onclick="loadHealth()">
           ${iconHealth()}
           <span>Health</span>
+        </button>
+
+        <button class="secondary" id="reportBtn" onclick="loadStocksReport()">
+          ${iconReport()}
+          <span>Stocks Report</span>
         </button>
 
         <button id="manualScanBtn" onclick="runManualScan()">

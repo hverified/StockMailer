@@ -34,6 +34,22 @@ class StockDBService {
   async deleteOldScans(daysToKeep = 90) {
     return this._ensureRepository().deleteOlderThan(daysToKeep);
   }
+
+  async updateStockOutcome(symbol, date, outcome) {
+    return this._ensureRepository().updateOutcomeBySymbolAndDate(
+      symbol,
+      date,
+      outcome
+    );
+  }
+
+  async getDateOutcomeReport(date) {
+    return this._ensureRepository().getDateOutcomeReport(date);
+  }
+
+  async getAggregateOutcomeReport(limit = 30) {
+    return this._ensureRepository().getAggregateOutcomeReport(limit);
+  }
 }
 
 module.exports = StockDBService;

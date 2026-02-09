@@ -67,6 +67,8 @@ class StockRepository {
               },
               $setOnInsert: {
                 createdAt: timestamp,
+                triggeredStatus: "unmarked",
+                pnlStatus: "unmarked",
               },
             },
             upsert: true,
@@ -350,6 +352,274 @@ class StockRepository {
       logger.error("Failed to get latest scan date:", error);
       throw new DatabaseError(
         `Failed to get latest scan date: ${error.message}`
+      );
+    }
+  }
+
+  /**
+   * Update stock trade outcome for a given date
+   * @param {string} symbol - Stock symbol
+   * @param {string} date - Date in YYYY-MM-DD format
+   * @param {Object} outcome - Outcome payload
+   * @returns {Promise<Object>} Updated stock document
+   */
+  async updateOutcomeBySymbolAndDate(symbol, date, outcome = {}) {
+    try {
+      const validTriggered = ["triggered", "not_triggered", "unmarked"];
+      const validPnl = ["profit", "loss", "unmarked"];
+
+      const normalizedTriggered = validTriggered.includes(outcome.triggeredStatus)
+        ? outcome.triggeredStatus
+        : undefined;
+      let normalizedPnl = validPnl.includes(outcome.pnlStatus)
+        ? outcome.pnlStatus
+        : undefined;
+
+      const update = {
+        updatedAt: new Date(),
+        outcomeUpdatedAt: new Date(),
+      };
+
+      if (normalizedTriggered) {
+        update.triggeredStatus = normalizedTriggered;
+      }
+
+      if (normalizedPnl) {
+        update.pnlStatus = normalizedPnl;
+      }
+
+      if (normalizedTriggered === "not_triggered") {
+        update.pnlStatus = "unmarked";
+        normalizedPnl = "unmarked";
+      }
+
+      if (normalizedTriggered === "unmarked" && !normalizedPnl) {
+        update.pnlStatus = "unmarked";
+      }
+
+      await this._getCollection().updateOne(
+        {
+          symbol: symbol.toUpperCase(),
+          scannedDate: date,
+        },
+        { $set: update },
+      );
+
+      return await this._getCollection().findOne({
+        symbol: symbol.toUpperCase(),
+        scannedDate: date,
+      });
+    } catch (error) {
+      logger.error(
+        `Failed to update outcome for ${symbol} on ${date}:`,
+        error
+      );
+      throw new DatabaseError(`Failed to update stock outcome: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get outcome report for a date
+   * @param {string} date - Date in YYYY-MM-DD format
+   * @returns {Promise<Object>} Outcome report
+   */
+  async getDateOutcomeReport(date) {
+    try {
+      const stocks = await this._getCollection()
+        .find({ scannedDate: date })
+        .project({
+          symbol: 1,
+          triggeredStatus: 1,
+          pnlStatus: 1,
+          per_chg: 1,
+          volume: 1,
+        })
+        .toArray();
+
+      const totalShortlisted = stocks.length;
+
+      const normalizedStocks = stocks.map((stock) => ({
+        triggeredStatus: ["triggered", "not_triggered", "unmarked"].includes(
+          stock.triggeredStatus
+        )
+          ? stock.triggeredStatus
+          : "unmarked",
+        pnlStatus: ["profit", "loss", "unmarked"].includes(stock.pnlStatus)
+          ? stock.pnlStatus
+          : "unmarked",
+        change: Number(stock.per_chg) || 0,
+        volume: Number(stock.volume) || 0,
+      }));
+
+      const triggered = normalizedStocks.filter(
+        (s) => s.triggeredStatus === "triggered"
+      ).length;
+      const notTriggered = normalizedStocks.filter(
+        (s) => s.triggeredStatus === "not_triggered"
+      ).length;
+      const unmarkedTrigger = normalizedStocks.filter(
+        (s) => s.triggeredStatus === "unmarked"
+      ).length;
+
+      const profits = normalizedStocks.filter((s) => s.pnlStatus === "profit").length;
+      const losses = normalizedStocks.filter((s) => s.pnlStatus === "loss").length;
+      const unmarkedPnl = normalizedStocks.filter(
+        (s) => s.pnlStatus === "unmarked"
+      ).length;
+
+      const resolvedTrades = profits + losses;
+      const openTriggeredTrades = Math.max(triggered - resolvedTrades, 0);
+      const totalVolume = normalizedStocks.reduce((sum, s) => sum + s.volume, 0);
+      const avgChange =
+        totalShortlisted > 0
+          ? normalizedStocks.reduce((sum, s) => sum + s.change, 0) /
+            totalShortlisted
+          : 0;
+
+      const triggerRate =
+        totalShortlisted > 0 ? (triggered / totalShortlisted) * 100 : 0;
+      const winRate = resolvedTrades > 0 ? (profits / resolvedTrades) * 100 : 0;
+
+      return {
+        date,
+        totalShortlisted,
+        triggered,
+        notTriggered,
+        unmarkedTrigger,
+        profits,
+        losses,
+        unmarkedPnl,
+        resolvedTrades,
+        openTriggeredTrades,
+        triggerRate: Number(triggerRate.toFixed(2)),
+        winRate: Number(winRate.toFixed(2)),
+        avgChange: Number(avgChange.toFixed(2)),
+        totalVolume,
+      };
+    } catch (error) {
+      logger.error(`Failed to build outcome report for ${date}:`, error);
+      throw new DatabaseError(`Failed to build outcome report: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get aggregated outcome report across all dates
+   * @param {number} dateLimit - Number of recent date summaries
+   * @returns {Promise<Object>} Aggregate report
+   */
+  async getAggregateOutcomeReport(dateLimit = 30) {
+    try {
+      const stocks = await this._getCollection()
+        .find({
+          scannedDate: { $ne: null, $exists: true },
+        })
+        .project({
+          scannedDate: 1,
+          triggeredStatus: 1,
+          pnlStatus: 1,
+          per_chg: 1,
+          volume: 1,
+        })
+        .toArray();
+
+      const safeDateLimit =
+        Number.isFinite(dateLimit) && dateLimit > 0
+          ? Math.min(Math.floor(dateLimit), 100)
+          : 30;
+
+      const byDateMap = new Map();
+      const summary = {
+        totalShortlisted: 0,
+        triggered: 0,
+        notTriggered: 0,
+        unmarkedTrigger: 0,
+        profits: 0,
+        losses: 0,
+        unmarkedPnl: 0,
+        totalVolume: 0,
+        totalChange: 0,
+        totalScans: 0,
+      };
+
+      const normalizeTriggered = (value) =>
+        ["triggered", "not_triggered", "unmarked"].includes(value)
+          ? value
+          : "unmarked";
+      const normalizePnl = (value) =>
+        ["profit", "loss", "unmarked"].includes(value) ? value : "unmarked";
+
+      for (const stock of stocks) {
+        const date = stock.scannedDate;
+        const triggeredStatus = normalizeTriggered(stock.triggeredStatus);
+        const pnlStatus = normalizePnl(stock.pnlStatus);
+        const change = Number(stock.per_chg) || 0;
+        const volume = Number(stock.volume) || 0;
+
+        summary.totalShortlisted += 1;
+        summary.totalVolume += volume;
+        summary.totalChange += change;
+
+        if (triggeredStatus === "triggered") summary.triggered += 1;
+        if (triggeredStatus === "not_triggered") summary.notTriggered += 1;
+        if (triggeredStatus === "unmarked") summary.unmarkedTrigger += 1;
+
+        if (pnlStatus === "profit") summary.profits += 1;
+        if (pnlStatus === "loss") summary.losses += 1;
+        if (pnlStatus === "unmarked") summary.unmarkedPnl += 1;
+
+        if (!byDateMap.has(date)) {
+          byDateMap.set(date, {
+            date,
+            totalShortlisted: 0,
+            triggered: 0,
+            notTriggered: 0,
+            profits: 0,
+            losses: 0,
+          });
+        }
+
+        const day = byDateMap.get(date);
+        day.totalShortlisted += 1;
+        if (triggeredStatus === "triggered") day.triggered += 1;
+        if (triggeredStatus === "not_triggered") day.notTriggered += 1;
+        if (pnlStatus === "profit") day.profits += 1;
+        if (pnlStatus === "loss") day.losses += 1;
+      }
+
+      const resolvedTrades = summary.profits + summary.losses;
+      const openTriggeredTrades = Math.max(summary.triggered - resolvedTrades, 0);
+      const avgChange =
+        summary.totalShortlisted > 0
+          ? summary.totalChange / summary.totalShortlisted
+          : 0;
+      const triggerRate =
+        summary.totalShortlisted > 0
+          ? (summary.triggered / summary.totalShortlisted) * 100
+          : 0;
+      const winRate =
+        resolvedTrades > 0 ? (summary.profits / resolvedTrades) * 100 : 0;
+
+      const byDate = Array.from(byDateMap.values())
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .slice(0, safeDateLimit);
+
+      summary.totalScans = byDateMap.size;
+
+      return {
+        summary: {
+          ...summary,
+          resolvedTrades,
+          openTriggeredTrades,
+          avgChange: Number(avgChange.toFixed(2)),
+          triggerRate: Number(triggerRate.toFixed(2)),
+          winRate: Number(winRate.toFixed(2)),
+        },
+        byDate,
+      };
+    } catch (error) {
+      logger.error("Failed to build aggregate outcome report:", error);
+      throw new DatabaseError(
+        `Failed to build aggregate outcome report: ${error.message}`
       );
     }
   }

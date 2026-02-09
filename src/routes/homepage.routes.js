@@ -87,6 +87,43 @@ router.get(
 );
 
 /**
+ * @route GET /scan-history/:date/report
+ * @desc Get stock outcome report for a specific date
+ * @param {string} date - Date in YYYY-MM-DD format
+ * @access Requires database connection
+ */
+router.get(
+  "/scan-history/:date/report",
+  ensureDbConnection,
+  asyncHandler(historyController.getDateOutcomeReport)
+);
+
+/**
+ * @route PATCH /scan-history/:date/stocks/:symbol/outcome
+ * @desc Update triggered/profitability outcome for a stock
+ * @param {string} date - Date in YYYY-MM-DD format
+ * @param {string} symbol - Stock symbol
+ * @access Requires database connection
+ */
+router.patch(
+  "/scan-history/:date/stocks/:symbol/outcome",
+  ensureDbConnection,
+  asyncHandler(historyController.updateStockOutcome)
+);
+
+/**
+ * @route GET /stocks-report
+ * @desc Get aggregated stock outcome report across scans
+ * @query {number} limit - Number of recent date rows (default 30, max 100)
+ * @access Requires database connection
+ */
+router.get(
+  "/stocks-report",
+  ensureDbConnection,
+  asyncHandler(historyController.getAggregateOutcomeReport)
+);
+
+/**
  * @route GET /stock-history/:symbol
  * @desc Get history for a specific stock symbol
  * @param {string} symbol - Stock symbol (e.g., RELIANCE)

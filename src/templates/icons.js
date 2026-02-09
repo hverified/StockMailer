@@ -36,9 +36,21 @@ function iconPlay() {
   `;
 }
 
+function iconReport() {
+  return `
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+      <line x1="4" y1="20" x2="20" y2="20"></line>
+      <rect x="5" y="11" width="3" height="7"></rect>
+      <rect x="10.5" y="8" width="3" height="10"></rect>
+      <rect x="16" y="5" width="3" height="13"></rect>
+    </svg>
+  `;
+}
+
 module.exports = {
   iconHistory,
   iconSearch,
   iconHealth,
   iconPlay,
+  iconReport,
 };

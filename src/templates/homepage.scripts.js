@@ -34,7 +34,19 @@ const utils = {
     day: 'numeric',
     month: 'long',
     year: 'numeric'
-  })
+  }),
+
+  formatDateTime: (dateStr) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
 };
 
 // DOM Functions
@@ -157,6 +169,11 @@ const api = {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
+  }),
+  patch: (url, body) => api.fetch(url, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
   })
 };
 
@@ -239,7 +256,120 @@ const components = {
       <h3 style="margin:0 0 8px;">\${title}</h3>
       <p style="color:#64748b;">\${message}</p>
     </div>
-  \`
+  \`,
+
+  outcomeReport: (report) => \`
+    <div class="report-wrap">
+      <div class="report-header">
+        <h3>Stocks Report</h3>
+        <span>\${utils.formatDate(report.date)}</span>
+      </div>
+      <div class="report-grid">
+        <div class="report-card">
+          <div class="report-label">Total Shortlisted</div>
+          <div class="report-value">\${report.totalShortlisted}</div>
+        </div>
+        <div class="report-card">
+          <div class="report-label">Triggered</div>
+          <div class="report-value">\${report.triggered}</div>
+        </div>
+        <div class="report-card">
+          <div class="report-label">Not Triggered</div>
+          <div class="report-value">\${report.notTriggered}</div>
+        </div>
+        <div class="report-card">
+          <div class="report-label">Profit</div>
+          <div class="report-value positive">\${report.profits}</div>
+        </div>
+        <div class="report-card">
+          <div class="report-label">Loss</div>
+          <div class="report-value negative">\${report.losses}</div>
+        </div>
+        <div class="report-card">
+          <div class="report-label">Open Triggered Trades</div>
+          <div class="report-value">\${report.openTriggeredTrades}</div>
+        </div>
+        <div class="report-card">
+          <div class="report-label">Trigger Rate</div>
+          <div class="report-value">\${Number(report.triggerRate || 0).toFixed(2)}%</div>
+        </div>
+        <div class="report-card">
+          <div class="report-label">Win Rate</div>
+          <div class="report-value">\${Number(report.winRate || 0).toFixed(2)}%</div>
+        </div>
+        <div class="report-card">
+          <div class="report-label">Avg % Change</div>
+          <div class="report-value">\${Number(report.avgChange || 0).toFixed(2)}%</div>
+        </div>
+      </div>
+    </div>
+  \`,
+
+  aggregateReport: (report) => {
+    const summary = report?.summary || {};
+    const byDate = Array.isArray(report?.byDate) ? report.byDate : [];
+
+    const rows = byDate.length
+      ? byDate.map((day) => \`
+        <tr>
+          <td>\${utils.formatDate(day.date)}</td>
+          <td>\${day.totalShortlisted || 0}</td>
+          <td>\${day.triggered || 0}</td>
+          <td>\${day.notTriggered || 0}</td>
+          <td style="color:#15803d;font-weight:700;">\${day.profits || 0}</td>
+          <td style="color:#b91c1c;font-weight:700;">\${day.losses || 0}</td>
+        </tr>
+      \`).join('')
+      : '<tr><td colspan="6" style="text-align:center;color:#64748b;">No report data available yet.</td></tr>';
+
+    return \`
+      <div class="report-wrap">
+        <div class="report-header">
+          <h3>Aggregated Stocks Report</h3>
+          <span>Across all scan dates</span>
+        </div>
+
+        <div class="report-grid">
+          <div class="report-card"><div class="report-label">Total Scans</div><div class="report-value">\${summary.totalScans || 0}</div></div>
+          <div class="report-card"><div class="report-label">Total Shortlisted</div><div class="report-value">\${summary.totalShortlisted || 0}</div></div>
+          <div class="report-card"><div class="report-label">Triggered</div><div class="report-value">\${summary.triggered || 0}</div></div>
+          <div class="report-card"><div class="report-label">Not Triggered</div><div class="report-value">\${summary.notTriggered || 0}</div></div>
+          <div class="report-card"><div class="report-label">Profit</div><div class="report-value positive">\${summary.profits || 0}</div></div>
+          <div class="report-card"><div class="report-label">Loss</div><div class="report-value negative">\${summary.losses || 0}</div></div>
+          <div class="report-card"><div class="report-label">Open Triggered</div><div class="report-value">\${summary.openTriggeredTrades || 0}</div></div>
+          <div class="report-card"><div class="report-label">Trigger Rate</div><div class="report-value">\${Number(summary.triggerRate || 0).toFixed(2)}%</div></div>
+          <div class="report-card"><div class="report-label">Win Rate</div><div class="report-value">\${Number(summary.winRate || 0).toFixed(2)}%</div></div>
+          <div class="report-card"><div class="report-label">Avg % Change</div><div class="report-value">\${Number(summary.avgChange || 0).toFixed(2)}%</div></div>
+          <div class="report-card"><div class="report-label">Resolved Trades</div><div class="report-value">\${summary.resolvedTrades || 0}</div></div>
+          <div class="report-card"><div class="report-label">Total Volume</div><div class="report-value">\${utils.formatNumber(summary.totalVolume || 0)}</div></div>
+        </div>
+      </div>
+
+      <div class="report-wrap">
+        <div class="report-header">
+          <h3>Date-wise Breakdown</h3>
+          <span>Latest 30 scan days</span>
+        </div>
+        <div class="report-table-wrap">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Shortlisted</th>
+                <th>Triggered</th>
+                <th>Not Triggered</th>
+                <th>Profit</th>
+                <th>Loss</th>
+              </tr>
+            </thead>
+            <tbody>
+              \${rows}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    \`;
+  },
 };
 
 // View Loaders
@@ -446,7 +576,7 @@ async function loadHistoryDetail(date) {
   
   dom.showLoader(3);
   await utils.sleep(200);
-  
+
   const data = await api.get(\`/scan-history/\${date}\`);
   dom.setContent('');
   
@@ -460,13 +590,24 @@ async function loadHistoryDetail(date) {
       <button onclick="loadHistory()" style="padding:8px 16px;border-radius:8px;">← Back to History</button>
     </div>
   \`);
-  
-  const nifty = { ...data.niftyData, price: data.niftyData?.currentPrice, ema20: data.niftyData?.ema20, aboveEMA: data.niftyData?.isAboveEMA };
 
-  
   const stocksHtml = data.stocks.map(s => {
     const chg = parseFloat(s.per_chg) || 0;
     const isUp = chg >= 0;
+    const triggeredStatus = ['triggered', 'not_triggered'].includes(s.triggeredStatus) ? s.triggeredStatus : 'unmarked';
+    const pnlStatus = ['profit', 'loss'].includes(s.pnlStatus) ? s.pnlStatus : 'unmarked';
+    const hasOutcome = triggeredStatus !== 'unmarked' || pnlStatus !== 'unmarked';
+    const lastUpdated = utils.formatDateTime(s.outcomeUpdatedAt || s.updatedAt);
+    const toneClass =
+      pnlStatus === 'profit'
+        ? 'tone-profit'
+        : pnlStatus === 'loss'
+          ? 'tone-loss'
+          : triggeredStatus === 'triggered'
+            ? 'tone-triggered'
+            : triggeredStatus === 'not_triggered'
+              ? 'tone-not-triggered'
+              : 'tone-unmarked';
     
     const dayHigh = Number(s.dayHigh) || 0;
     const dayLow = Number(s.dayLow) || 0;
@@ -477,26 +618,53 @@ async function loadHistoryDetail(date) {
     const changeIcon = isUp
       ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>'
       : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
-    
-    const volumeIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="6" height="16"></rect><rect x="9" y="8" width="6" height="12"></rect><rect x="17" y="2" width="6" height="18"></rect></svg>';
-    
+
     return \`
-      <div class="history-item history-stock-card">
+      <div class="history-item history-stock-card \${hasOutcome ? 'is-marked' : ''} \${toneClass}" onclick="selectStockCard(this)" data-symbol="\${s.symbol || ''}">
         <div class="history-header">
           <div class="history-date-row" style="margin-bottom:12px;">
             <div class="history-date" style="flex:1;">
               <div style="font-weight:600;font-size:15px;color:#020617;">\${s.stock_name || 'N/A'}</div>
-              <div style="color:#0ea5e9;font-size:12px;font-weight:600;margin-top:2px;">\${s.symbol || ''}</div>
+              <div style="color:#1d4ed8;font-size:12px;font-weight:600;margin-top:2px;">\${s.symbol || ''}</div>
+              <div class="outcome-summary">
+                <span class="status-badge \${triggeredStatus === 'triggered' ? 'triggered' : triggeredStatus === 'not_triggered' ? 'not-triggered' : 'muted'}">
+                  \${triggeredStatus === 'triggered' ? 'Entry: Triggered' : triggeredStatus === 'not_triggered' ? 'Entry: Not Triggered' : 'Entry: Pending'}
+                </span>
+                <span class="status-badge \${pnlStatus === 'profit' ? 'profit' : pnlStatus === 'loss' ? 'loss' : 'muted'}">
+                  \${pnlStatus === 'profit' ? 'P/L: Profit' : pnlStatus === 'loss' ? 'P/L: Loss' : 'P/L: Pending'}
+                </span>
+                <span class="status-saved \${hasOutcome ? 'done' : 'pending'}">\${hasOutcome ? 'Reviewed' : 'Pending'}</span>
+              </div>
+              \${hasOutcome && lastUpdated ? \`<div class="outcome-updated">Updated: \${lastUpdated}</div>\` : ''}
             </div>
-            <div style="text-align:right;">
-              <div style="font-size:22px;font-weight:800;color:#020617;">
+            <div class="stock-price-block">
+              <div class="stock-price-value">
 ₹\${Number(s.close || 0).toFixed(2)}</div>
-              <div style="font-size:13px;font-weight:700;color:\${isUp ? '#16a34a' : '#dc2626'};display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:2px;">
+              <div class="stock-change-line" style="color:\${isUp ? '#16a34a' : '#dc2626'};">
                 <span style="display:inline-flex;">\${changeIcon}</span>
                 <span>\${isUp ? '+' : ''}\${chg.toFixed(2)}%</span>
               </div>
             </div>
           </div>
+        </div>
+
+        <div class="outcome-row">
+          <button class="outcome-chip \${triggeredStatus === 'triggered' ? 'active triggered' : ''}"
+            onclick="markStockOutcome(event, '\${date}', '\${s.symbol || ''}', 'triggeredStatus', 'triggered')">
+            Triggered
+          </button>
+          <button class="outcome-chip \${triggeredStatus === 'not_triggered' ? 'active not-triggered' : ''}"
+            onclick="markStockOutcome(event, '\${date}', '\${s.symbol || ''}', 'triggeredStatus', 'not_triggered')">
+            Not Triggered
+          </button>
+          <button class="outcome-chip \${pnlStatus === 'profit' ? 'active profit' : ''}"
+            onclick="markStockOutcome(event, '\${date}', '\${s.symbol || ''}', 'pnlStatus', 'profit')">
+            Profit
+          </button>
+          <button class="outcome-chip \${pnlStatus === 'loss' ? 'active loss' : ''}"
+            onclick="markStockOutcome(event, '\${date}', '\${s.symbol || ''}', 'pnlStatus', 'loss')">
+            Loss
+          </button>
         </div>
         
         <div class="history-stats" style="grid-template-columns:repeat(3, 1fr);">
@@ -545,6 +713,69 @@ async function loadHistoryDetail(date) {
   }).join('');
   
   dom.addContent('<div>' + stocksHtml + '</div>');
+}
+
+async function loadStocksReport() {
+  dom.setActive('reportBtn');
+  dom.showLoader(2);
+  await utils.sleep(240);
+
+  try {
+    const data = await api.get('/stocks-report?limit=30');
+    dom.setContent('');
+
+    if (!data.success) {
+      dom.addContent(components.emptyState(
+        '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>',
+        'Report Unavailable',
+        'Unable to load aggregated stocks report.'
+      ));
+      return;
+    }
+
+    dom.addContent(components.aggregateReport(data.report));
+  } catch (error) {
+    dom.setContent(components.emptyState(
+      '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>',
+      'Error Loading Report',
+      'Failed to fetch aggregated stocks report. Please try again.'
+    ));
+  }
+}
+
+function selectStockCard(cardElement) {
+  document.querySelectorAll('.history-stock-card').forEach((card) => {
+    card.classList.remove('is-selected');
+  });
+  cardElement.classList.add('is-selected');
+}
+
+async function markStockOutcome(event, date, symbol, field, value) {
+  event.stopPropagation();
+
+  if (!date || !symbol || !field || !value) return;
+
+  const payload = { [field]: value };
+
+  if (field === 'pnlStatus') {
+    payload.triggeredStatus = 'triggered';
+  }
+
+  if (field === 'triggeredStatus' && value === 'not_triggered') {
+    payload.pnlStatus = 'unmarked';
+  }
+
+  try {
+    const safeSymbol = encodeURIComponent(symbol);
+    await api.patch(\`/scan-history/\${date}/stocks/\${safeSymbol}/outcome\`, payload);
+    await loadHistoryDetail(date);
+  } catch (error) {
+    customAlert.show({
+      type: 'error',
+      title: 'Update Failed',
+      message: 'Could not save stock outcome. Please try again.'
+    });
+  }
 }
 
 function isScanAllowedNow() {
