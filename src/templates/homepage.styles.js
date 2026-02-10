@@ -6,15 +6,24 @@ const css = `
   --bg:#f3f5f8;
   --surface:#ffffff;
   --surface-soft:#f8fafc;
+  --surface-alt:#f1f5f9;
   --surface-blue:#f7fbff;
   --surface-mint:#f7fdfb;
   --text:#0f172a;
+  --text-strong:#0b1b33;
+  --text-soft:#334155;
+  --text-dim:#64748b;
   --muted:#5f6f86;
   --accent:#1d4ed8;
+  --accent-ink:#1e3a8a;
   --accent-soft:#dbeafe;
   --success:#166534;
+  --success-strong:#15803d;
   --danger:#991b1b;
+  --danger-strong:#b91c1c;
   --border:#d9e1ec;
+  --line:#e2e8f0;
+  --line-soft:#dbe3f0;
   --border-strong:#c6d2e3;
   --shadow-sm:0 1px 2px rgba(15, 23, 42, 0.05);
   --shadow-md:0 10px 24px rgba(15, 23, 42, 0.08);
@@ -33,8 +42,8 @@ body {
   margin:0;
   font-family:'IBM Plex Sans','Segoe UI',Arial,sans-serif;
   background:
-    radial-gradient(circle at 10% 0%, rgba(59, 130, 246, 0.06), transparent 34%),
-    radial-gradient(circle at 90% 20%, rgba(16, 185, 129, 0.04), transparent 30%),
+    radial-gradient(circle at 10% 0%, rgba(29, 78, 216, 0.07), transparent 34%),
+    radial-gradient(circle at 90% 20%, rgba(22, 163, 74, 0.04), transparent 30%),
     var(--bg);
   color:var(--text);
   min-height:100vh;
@@ -61,7 +70,7 @@ body {
   font-weight:700;
   letter-spacing:-0.03em;
   margin:0;
-  color:#0b1b33;
+  color:var(--text-strong);
   line-height:1.1;
 }
 
@@ -80,7 +89,7 @@ body {
   width:22px;
   height:2px;
   border-radius:999px;
-  background:linear-gradient(90deg, #60a5fa, #34d399);
+  background:linear-gradient(90deg, #60a5fa, #22c55e);
 }
 
 .actions {
@@ -107,7 +116,7 @@ button,a {
   cursor:pointer;
   text-decoration:none;
   background:var(--surface-soft);
-  color:#334155;
+  color:var(--text-soft);
   transition:all 0.2s ease;
   box-shadow:none;
   letter-spacing:0.01em;
@@ -143,14 +152,14 @@ button,a {
 
 button:hover,a:hover {
   border-color:var(--border-strong);
-  background:#f1f5f9;
+  background:var(--surface-alt);
   transform:translateY(-0.5px);
   box-shadow:var(--shadow-sm);
 }
 
 button.secondary.active {
   background:var(--surface);
-  color:#0f172a;
+  color:var(--text);
   border-color:#bfdbfe;
   box-shadow:
     0 1px 2px rgba(15, 23, 42, 0.06),
@@ -159,7 +168,7 @@ button.secondary.active {
 
 button.secondary:hover {
   background:#f8fafc;
-  border-color:#dbe3f0;
+  border-color:var(--line-soft);
   box-shadow:var(--shadow-sm);
 }
 button.secondary {
@@ -214,11 +223,11 @@ a:focus-visible {
 
 a.docs {
   background:#f8fafc;
-  color:#475569;
+  color:var(--text-soft);
 }
 
 a.docs:hover {
-  background:#f1f5f9;
+  background:var(--surface-alt);
 }
 
 .grid {
@@ -308,7 +317,7 @@ a.docs:hover {
 }
 
 .market-stock-symbol {
-  color:#0ea5e9;
+  color:var(--accent);
   font-size:var(--fs-xs);
 }
 
@@ -392,25 +401,25 @@ a.docs:hover {
 }
 
 .history-outcome-pill.triggered {
-  color:#1e3a8a;
+  color:var(--accent-ink);
   background:#eff6ff;
   border-color:#bfdbfe;
 }
 
 .history-outcome-pill.not-triggered {
-  color:#334155;
-  background:#f1f5f9;
+  color:var(--text-soft);
+  background:var(--surface-alt);
   border-color:#cbd5e1;
 }
 
 .history-outcome-pill.profit {
-  color:#166534;
+  color:var(--success);
   background:#f0fdf4;
   border-color:#86efac;
 }
 
 .history-outcome-pill.loss {
-  color:#991b1b;
+  color:var(--danger);
   background:#fef2f2;
   border-color:#fecaca;
 }
@@ -425,7 +434,7 @@ a.docs:hover {
 .history-date {
   font-weight:700;
   font-size:17px;
-  color:#0f172a;
+  color:var(--text);
   display:flex;
   align-items:center;
   gap:8px;
@@ -439,13 +448,13 @@ a.docs:hover {
   border-radius:999px;
   font-size:var(--fs-xs);
   font-weight:600;
-  background:#f0fdf4;
+  background:#f3fbf6;
   color:var(--success);
   border:1px solid #bbf7d0;
 }
 
 .history-badge.bearish {
-  background:#fef2f2;
+  background:#fff5f5;
   color:var(--danger);
   border-color:#fecaca;
 }
@@ -463,19 +472,19 @@ a.docs:hover {
   text-align:center;
   padding:8px;
   background:linear-gradient(180deg, #f8fafc 0%, #f3f7fc 100%);
-  border:1px solid #e2e8f0;
+  border:1px solid var(--line);
   border-radius:var(--radius-md);
   transition:all 0.2s;
 }
 
 .history-stat:hover {
-  background:#f1f5f9;
+  background:var(--surface-alt);
   transform:none;
 }
 
 .history-stat-label {
   font-size:10.5px;
-  color:#64748b;
+  color:var(--text-dim);
   font-weight:600;
   text-transform:uppercase;
   letter-spacing:0.5px;
@@ -485,7 +494,7 @@ a.docs:hover {
 .history-stat-value {
   font-size:var(--fs-lg);
   font-weight:700;
-  color:#0f172a;
+  color:var(--text);
 }
 
 .history-stock-count {
@@ -516,7 +525,7 @@ a.docs:hover {
   margin-left:3px;
   font-size:var(--fs-xxs);
   font-weight:700;
-  color:#1e3a8a;
+  color:var(--accent-ink);
 }
 
 .report-wrap {
@@ -555,7 +564,7 @@ a.docs:hover {
 }
 
 .report-card {
-  border:1px solid #e2e8f0;
+  border:1px solid var(--line);
   background:linear-gradient(180deg, #f8fafc 0%, #f1f5fb 100%);
   border-radius:10px;
   padding:10px;
@@ -577,38 +586,46 @@ a.docs:hover {
 }
 
 .report-value.positive {
-  color:#15803d;
+  color:var(--success-strong);
 }
 
 .report-value.negative {
-  color:#b91c1c;
+  color:var(--danger);
 }
 
 .report-table-wrap {
   width:100%;
-  overflow:auto;
-  border:1px solid #e2e8f0;
+  overflow:hidden;
+  border:1px solid var(--line);
   border-radius:var(--radius-md);
 }
 
 .report-table {
   width:100%;
   border-collapse:collapse;
-  min-width:700px;
-  background:#fff;
+  min-width:0;
+  table-layout:fixed;
+  background:var(--surface);
 }
 
 .report-table th,
 .report-table td {
-  padding:10px 12px;
+  padding:9px 8px;
+  text-align:center;
+  border-bottom:1px solid var(--line);
+  font-size:12px;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+
+.report-table th:first-child,
+.report-table td:first-child {
   text-align:left;
-  border-bottom:1px solid #e2e8f0;
-  font-size:var(--fs-sm);
 }
 
 .report-table th {
   background:linear-gradient(180deg, #f8fafc 0%, #eef4fc 100%);
-  color:#475569;
+  color:var(--text-soft);
   font-weight:700;
   font-size:var(--fs-xs);
   text-transform:uppercase;
@@ -616,7 +633,7 @@ a.docs:hover {
 }
 
 .report-table tbody tr:hover {
-  background:#f8fafc;
+  background:var(--surface-soft);
 }
 
 .report-table tbody tr:nth-child(even) {
@@ -624,18 +641,18 @@ a.docs:hover {
 }
 
 .report-profit-cell {
-  color:#15803d;
+  color:var(--success-strong);
   font-weight:700;
 }
 
 .report-loss-cell {
-  color:#b91c1c;
+  color:var(--danger);
   font-weight:700;
 }
 
 .report-empty-cell {
   text-align:center;
-  color:#64748b;
+  color:var(--text-dim);
 }
 
 .outcome-row {
@@ -646,9 +663,9 @@ a.docs:hover {
 }
 
 .outcome-chip {
-  border:1px solid #dbe3f0;
+  border:1px solid var(--line-soft);
   background:linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  color:#334155;
+  color:var(--text-soft);
   border-radius:var(--radius-md);
   font-size:var(--fs-xs);
   font-weight:700;
@@ -660,38 +677,38 @@ a.docs:hover {
 }
 
 .outcome-chip:hover {
-  background:linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  background:linear-gradient(180deg, var(--surface-soft) 0%, var(--surface-alt) 100%);
   border-color:#cdd8ea;
 }
 
 .outcome-chip.active {
   border-color:#bfdbfe;
   background:#eff6ff;
-  color:#1d4ed8;
+  color:var(--accent);
 }
 
 .outcome-chip.active.triggered {
   border-color:#86efac;
   background:#f0fdf4;
-  color:#166534;
+  color:var(--success);
 }
 
 .outcome-chip.active.not-triggered {
   border-color:#cbd5e1;
-  background:#f1f5f9;
-  color:#334155;
+  background:var(--surface-alt);
+  color:var(--text-soft);
 }
 
 .outcome-chip.active.profit {
   border-color:#86efac;
   background:#f0fdf4;
-  color:#166534;
+  color:var(--success);
 }
 
 .outcome-chip.active.loss {
   border-color:#fecaca;
   background:#fef2f2;
-  color:#991b1b;
+  color:var(--danger);
 }
 
 .outcome-chip:disabled {
@@ -710,7 +727,7 @@ a.docs:hover {
   width:14px;
   height:14px;
   border:2px solid #cbd5e1;
-  border-top-color:#1d4ed8;
+  border-top-color:var(--accent);
   border-radius:50%;
   animation:spin 0.8s linear infinite;
   left:50%;
@@ -855,33 +872,33 @@ a.docs:hover {
 }
 
 .status-badge.triggered {
-  color:#166534;
+  color:var(--success);
   background:#f0fdf4;
   border-color:#86efac;
 }
 
 .status-badge.not-triggered {
-  color:#334155;
-  background:#f1f5f9;
+  color:var(--text-soft);
+  background:var(--surface-alt);
   border-color:#cbd5e1;
 }
 
 .status-badge.profit {
-  color:#166534;
+  color:var(--success);
   background:#f0fdf4;
   border-color:#86efac;
 }
 
 .status-badge.loss {
-  color:#991b1b;
+  color:var(--danger);
   background:#fef2f2;
   border-color:#fecaca;
 }
 
 .status-badge.muted {
-  color:#64748b;
+  color:var(--text-dim);
   background:#f8fafc;
-  border-color:#e2e8f0;
+  border-color:var(--line);
 }
 
 .status-saved {
@@ -889,7 +906,7 @@ a.docs:hover {
   align-items:center;
   font-size:var(--fs-xxs);
   font-weight:700;
-  color:#1e3a8a;
+  color:var(--accent-ink);
   background:#eef2ff;
   border:1px solid #c7d2fe;
   border-radius:999px;
@@ -897,13 +914,13 @@ a.docs:hover {
 }
 
 .status-saved.pending {
-  color:#64748b;
+  color:var(--text-dim);
   background:#f8fafc;
-  border-color:#e2e8f0;
+  border-color:var(--line);
 }
 
 .status-saved.done {
-  color:#1e3a8a;
+  color:var(--accent-ink);
   background:#eef2ff;
   border-color:#c7d2fe;
 }
@@ -911,7 +928,7 @@ a.docs:hover {
 .outcome-updated {
   margin-top:6px;
   font-size:var(--fs-xs);
-  color:#64748b;
+  color:var(--text-dim);
   font-weight:600;
 }
 
@@ -926,7 +943,7 @@ a.docs:hover {
 }
 
 .stock-meta-symbol {
-  color:#1d4ed8;
+  color:var(--accent);
   font-size:var(--fs-sm);
   font-weight:600;
   margin-top:2px;
@@ -935,7 +952,7 @@ a.docs:hover {
 .stock-meta-date {
   margin-top:4px;
   font-size:var(--fs-xs);
-  color:#64748b;
+  color:var(--text-dim);
   font-weight:600;
 }
 
@@ -960,7 +977,7 @@ a.docs:hover {
 .empty-state-icon {
   margin-bottom:12px;
   display:inline-flex;
-  color:#64748b;
+  color:var(--text-dim);
 }
 
 .empty-state-title {
@@ -968,7 +985,7 @@ a.docs:hover {
 }
 
 .empty-state-message {
-  color:#64748b;
+  color:var(--text-dim);
 }
 
 .history-detail-header {
@@ -980,7 +997,7 @@ a.docs:hover {
   padding:8px 16px;
   border-radius:8px;
   background:linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  border-color:#d6e1f0;
+  border-color:var(--line-soft);
 }
 
 .history-back-btn:hover {
@@ -1009,7 +1026,7 @@ a.docs:hover {
 }
 
 .nifty-stat-cell {
-  background:#fff;
+  background:var(--surface);
   border-radius:12px;
   padding:10px;
   text-align:center;
@@ -1018,7 +1035,7 @@ a.docs:hover {
 
 .nifty-stat-label {
   font-size:var(--fs-xs);
-  color:#6b7280;
+  color:var(--text-dim);
 }
 
 .nifty-stat-value {
@@ -1045,7 +1062,7 @@ a.docs:hover {
 
 .health-stat-label {
   font-size:var(--fs-xs);
-  color:#6b7280;
+  color:var(--text-dim);
 }
 
 .health-stat-value {
@@ -1081,7 +1098,7 @@ a.docs:hover {
   max-width:420px;
   width:90%;
   box-shadow:0 16px 40px rgba(15, 23, 42, 0.18);
-  border:1px solid #dbe3f0;
+  border:1px solid var(--line-soft);
   animation:slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position:relative;
 }
@@ -1121,7 +1138,7 @@ a.docs:hover {
 
 .custom-alert-icon.error {
   background:linear-gradient(135deg, #fef2f2, #fee2e2);
-  color:#dc2626;
+  color:var(--danger-strong);
 }
 
 .custom-alert-title {
@@ -1135,7 +1152,7 @@ a.docs:hover {
 .custom-alert-message {
   font-size:var(--fs-md);
   text-align:center;
-  color:#64748b;
+  color:var(--text-dim);
   line-height:1.6;
   margin-bottom:24px;
 }
@@ -1145,14 +1162,14 @@ a.docs:hover {
   border-radius:12px;
   padding:16px;
   margin-bottom:24px;
-  border:1px solid #e2e8f0;
+  border:1px solid var(--line);
 }
 
 .custom-alert-detail {
   display:flex;
   justify-content:space-between;
   padding:8px 0;
-  border-bottom:1px dashed #dbe3f0;
+  border-bottom:1px dashed var(--line-soft);
 }
 
 .custom-alert-detail:last-child {
@@ -1161,7 +1178,7 @@ a.docs:hover {
 
 .custom-alert-detail-label {
   font-size:var(--fs-sm);
-  color:#64748b;
+  color:var(--text-dim);
   font-weight:500;
 }
 
@@ -1244,13 +1261,10 @@ a.docs:hover {
     grid-template-columns:repeat(2, minmax(0, 1fr));
   }
 
-  .report-table {
-    min-width:560px;
-  }
-
   .report-table th,
   .report-table td {
-    padding:8px 10px;
+    padding:7px 6px;
+    font-size:11px;
   }
   
   button,a {

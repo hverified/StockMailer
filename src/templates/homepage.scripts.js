@@ -28,6 +28,28 @@ const utils = {
       return 'Invalid Date';
     }
   },
+
+  formatDateNoWeekday: (dateStr) => {
+    if (!dateStr || dateStr === 'null' || dateStr === 'undefined') {
+      return 'Invalid Date';
+    }
+
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) {
+        return 'Invalid Date';
+      }
+
+      return date.toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
+    } catch (error) {
+      console.error('Date formatting error:', error);
+      return 'Invalid Date';
+    }
+  },
   
   getCurrentDate: () => new Date().toLocaleDateString('en-IN', {
     weekday: 'long',
@@ -184,7 +206,7 @@ const components = {
     const bg = isUp ? 'linear-gradient(135deg,#f0fdf4,#dcfce7)' : 'linear-gradient(135deg,#fef2f2,#fee2e2)';
     const border = isUp ? '#86efac' : '#fca5a5';
     const title = isUp ? '#166534' : '#991b1b';
-    const val = isUp ? '#16a34a' : '#dc2626';
+    const val = isUp ? '#15803d' : '#b91c1c';
     
     const trendIcon = isUp 
       ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>'
@@ -232,7 +254,7 @@ const components = {
         <div class="market-stock-price">
           ₹\${Number(stock.close || 0).toFixed(2)}
         </div>
-        <div class="market-stock-change" style="color:\${isUp ? '#16a34a' : '#dc2626'};">
+        <div class="market-stock-change" style="color:\${isUp ? '#15803d' : '#b91c1c'};">
           <span class="inline-icon">\${changeIcon}</span>
           <span>\${isUp ? '+' : ''}\${chg.toFixed(2)}%</span>
         </div>
@@ -258,7 +280,7 @@ const components = {
     const rows = byDate.length
       ? byDate.map((day) => \`
         <tr>
-          <td>\${utils.formatDate(day.date)}</td>
+          <td>\${utils.formatDateNoWeekday(day.date)}</td>
           <td>\${day.totalShortlisted || 0}</td>
           <td>\${day.triggered || 0}</td>
           <td>\${day.notTriggered || 0}</td>
@@ -285,9 +307,7 @@ const components = {
           <div class="report-card"><div class="report-label">Open Triggered</div><div class="report-value">\${summary.openTriggeredTrades || 0}</div></div>
           <div class="report-card"><div class="report-label">Trigger Rate</div><div class="report-value">\${Number(summary.triggerRate || 0).toFixed(2)}%</div></div>
           <div class="report-card"><div class="report-label">Win Rate</div><div class="report-value">\${Number(summary.winRate || 0).toFixed(2)}%</div></div>
-          <div class="report-card"><div class="report-label">Avg % Change</div><div class="report-value">\${Number(summary.avgChange || 0).toFixed(2)}%</div></div>
           <div class="report-card"><div class="report-label">Resolved Trades</div><div class="report-value">\${summary.resolvedTrades || 0}</div></div>
-          <div class="report-card"><div class="report-label">Total Volume</div><div class="report-value">\${utils.formatNumber(summary.totalVolume || 0)}</div></div>
         </div>
       </div>
 
@@ -301,10 +321,10 @@ const components = {
             <thead>
               <tr>
                 <th>Date</th>
-                <th>Shortlisted</th>
-                <th>Triggered</th>
-                <th>Not Triggered</th>
-                <th>Profit</th>
+                <th>Scanned</th>
+                <th>Trig</th>
+                <th>Not Trig</th>
+                <th>Gain</th>
                 <th>Loss</th>
               </tr>
             </thead>
@@ -329,7 +349,7 @@ async function loadHealth() {
   const bg = isUp ? 'linear-gradient(135deg,#f0fdf4,#dcfce7)' : 'linear-gradient(135deg,#fef2f2,#fee2e2)';
   const border = isUp ? '#86efac' : '#fca5a5';
   const title = isUp ? '#166534' : '#991b1b';
-  const val = isUp ? '#16a34a' : '#dc2626';
+  const val = isUp ? '#15803d' : '#b91c1c';
   
   const statusIcon = isUp
     ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>'
@@ -597,7 +617,7 @@ async function loadHistoryDetail(date) {
             <div class="stock-price-block">
               <div class="stock-price-value">
 ₹\${Number(s.close || 0).toFixed(2)}</div>
-              <div class="stock-change-line" style="color:\${isUp ? '#16a34a' : '#dc2626'};">
+              <div class="stock-change-line" style="color:\${isUp ? '#15803d' : '#b91c1c'};">
                 <span class="inline-icon">\${changeIcon}</span>
                 <span>\${isUp ? '+' : ''}\${chg.toFixed(2)}%</span>
               </div>
