@@ -342,6 +342,47 @@ a.docs:hover {
   margin-bottom:12px;
 }
 
+.history-outcome-strip {
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-bottom:12px;
+}
+
+.history-outcome-pill {
+  display:inline-flex;
+  align-items:center;
+  padding:3px 8px;
+  border-radius:999px;
+  font-size:10.5px;
+  font-weight:700;
+  border:1px solid transparent;
+}
+
+.history-outcome-pill.triggered {
+  color:#1e3a8a;
+  background:#eff6ff;
+  border-color:#bfdbfe;
+}
+
+.history-outcome-pill.not-triggered {
+  color:#334155;
+  background:#f1f5f9;
+  border-color:#cbd5e1;
+}
+
+.history-outcome-pill.profit {
+  color:#166534;
+  background:#f0fdf4;
+  border-color:#86efac;
+}
+
+.history-outcome-pill.loss {
+  color:#991b1b;
+  background:#fef2f2;
+  border-color:#fecaca;
+}
+
 .history-date-row {
   display:flex;
   justify-content:space-between;
@@ -826,6 +867,13 @@ a.docs:hover {
   margin-top:2px;
 }
 
+.stock-meta-date {
+  margin-top:4px;
+  font-size:11px;
+  color:#64748b;
+  font-weight:600;
+}
+
 .stat-value-inline {
   display:flex;
   align-items:center;
@@ -1131,6 +1179,16 @@ a.docs:hover {
   .history-stock-count {
     padding:0;
     min-height:auto;
+  }
+
+  .history-outcome-strip {
+    gap:5px;
+    margin-bottom:10px;
+  }
+
+  .history-outcome-pill {
+    font-size:9.5px;
+    padding:3px 7px;
   }
 
   .stock-count-dot {

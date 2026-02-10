@@ -151,6 +151,26 @@ class StockRepository {
               count: { $sum: 1 },
               timestamp: { $first: "$timestamp" },
               niftyData: { $first: "$niftyData" },
+              triggeredCount: {
+                $sum: {
+                  $cond: [{ $eq: ["$triggeredStatus", "triggered"] }, 1, 0],
+                },
+              },
+              notTriggeredCount: {
+                $sum: {
+                  $cond: [{ $eq: ["$triggeredStatus", "not_triggered"] }, 1, 0],
+                },
+              },
+              profitCount: {
+                $sum: {
+                  $cond: [{ $eq: ["$pnlStatus", "profit"] }, 1, 0],
+                },
+              },
+              lossCount: {
+                $sum: {
+                  $cond: [{ $eq: ["$pnlStatus", "loss"] }, 1, 0],
+                },
+              },
             },
           },
           { $sort: { _id: -1 } },
@@ -163,6 +183,10 @@ class StockRepository {
         count: d.count,
         timestamp: d.timestamp,
         niftyData: d.niftyData,
+        triggeredCount: d.triggeredCount || 0,
+        notTriggeredCount: d.notTriggeredCount || 0,
+        profitCount: d.profitCount || 0,
+        lossCount: d.lossCount || 0,
       }));
 
       logger.debug(`Retrieved ${formatted.length} scan dates`);

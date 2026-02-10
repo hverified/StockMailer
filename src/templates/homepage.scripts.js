@@ -482,6 +482,13 @@ async function loadHistory() {
             </div>
           </div>
         </div>
+
+        <div class="history-outcome-strip">
+          <span class="history-outcome-pill triggered">Trig: \${d.triggeredCount || 0}</span>
+          <span class="history-outcome-pill not-triggered">Not Trig: \${d.notTriggeredCount || 0}</span>
+          <span class="history-outcome-pill profit">Profit: \${d.profitCount || 0}</span>
+          <span class="history-outcome-pill loss">Loss: \${d.lossCount || 0}</span>
+        </div>
         
         <div class="history-stats">
           <div class="history-stat">
@@ -575,6 +582,7 @@ async function loadHistoryDetail(date) {
             <div class="history-date">
               <div class="stock-meta-name">\${s.stock_name || 'N/A'}</div>
               <div class="stock-meta-symbol">\${s.symbol || ''}</div>
+              <div class="stock-meta-date">Shortlisted: \${utils.formatDate(s.scannedDate || s.shortlisted_date || date)}</div>
               <div class="outcome-summary">
                 <span class="status-badge \${triggeredStatus === 'triggered' ? 'triggered' : triggeredStatus === 'not_triggered' ? 'not-triggered' : 'muted'}">
                   \${triggeredStatus === 'triggered' ? 'Entry: Triggered' : triggeredStatus === 'not_triggered' ? 'Entry: Not Triggered' : 'Entry: Pending'}
