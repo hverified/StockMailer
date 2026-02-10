@@ -468,6 +468,10 @@ a.docs:hover {
   border-top:1px dashed #e5e7eb;
 }
 
+.history-summary-stats {
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+}
+
 .history-stat {
   text-align:center;
   padding:8px;
@@ -1362,6 +1366,11 @@ a.docs:hover {
     gap:8px;
     margin-top:12px;
     padding-top:12px;
+  }
+
+  .history-summary-stats {
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:8px;
   }
 
   .history-stock-card .history-stats {

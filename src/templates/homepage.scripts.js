@@ -469,12 +469,6 @@ async function loadHistory() {
       return '';
     }
     
-    const isUp = d.niftyData?.isAboveEMA;
-    
-    const trendIcon = isUp
-      ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>'
-      : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>';
-
     const stockCount = Number(d.count) || 0;
     const dotLimit = 12;
     const visibleDots = Math.min(stockCount, dotLimit);
@@ -510,19 +504,7 @@ async function loadHistory() {
           <span class="history-outcome-pill loss">Loss: \${d.lossCount || 0}</span>
         </div>
         
-        <div class="history-stats">
-          <div class="history-stat">
-            <div class="history-stat-label">Status</div>
-            <div class="history-stat-value">
-              <span class="history-badge \${!isUp ? 'bearish' : ''}">
-                <span class="history-badge-content">
-                  <span class="inline-icon">\${trendIcon}</span>
-                <span>\${isUp ? 'Bullish' : 'Bearish'}</span>
-                </span>
-              </span>
-            </div>
-          </div>
-          
+        <div class="history-stats history-summary-stats">
           <div class="history-stat">
             <div class="history-stat-label">Nifty</div>
             <div class="history-stat-value">₹\${d.niftyData?.currentPrice?.toFixed(2) || 'N/A'}</div>
