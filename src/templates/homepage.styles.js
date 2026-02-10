@@ -279,6 +279,22 @@ a.docs:hover {
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
   gap:14px;
+  grid-column:1 / -1;
+  align-items:stretch;
+}
+
+.nifty-card {
+  grid-column:1 / -1;
+  max-width:560px;
+  width:min(100%, 560px);
+  box-sizing:border-box;
+}
+
+.nifty-card table {
+  width:100%;
+  table-layout:fixed;
+  border-collapse:separate;
+  border-spacing:0;
 }
 
 .market-stock-card {
@@ -984,6 +1000,12 @@ a.docs:hover {
   display:flex;
   align-items:center;
   gap:8px;
+  min-width:0;
+}
+
+.nifty-status-line span:last-child {
+  min-width:0;
+  overflow-wrap:anywhere;
 }
 
 .nifty-stat-cell {
@@ -991,6 +1013,7 @@ a.docs:hover {
   border-radius:12px;
   padding:10px;
   text-align:center;
+  min-width:0;
 }
 
 .nifty-stat-label {
@@ -1206,6 +1229,15 @@ a.docs:hover {
 
   .report-wrap {
     padding:12px;
+  }
+
+  .nifty-card {
+    max-width:none;
+    width:100%;
+  }
+
+  .nifty-card table td[width] {
+    width:8px;
   }
 
   .report-grid {

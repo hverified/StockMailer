@@ -191,7 +191,7 @@ const components = {
       : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>';
     
     return \`
-      <div class="card" style="background:\${bg};border:1px solid \${border};">
+      <div class="card nifty-card" style="background:\${bg};border:1px solid \${border};">
         <div class="nifty-status-line" style="color:\${title};">
           <span class="inline-icon" style="color:\${val};">\${trendIcon}</span>
           <span>Nifty \${isUp ? 'Above' : 'Below'} 20 EMA</span>
