@@ -712,6 +712,18 @@ async function markStockOutcome(event, date, symbol, field, value) {
 
   if (!date || !symbol || !field || !value) return;
 
+  const clickedBtn = event.currentTarget;
+  const actionRow = clickedBtn?.closest('.outcome-row');
+
+  if (clickedBtn) {
+    clickedBtn.classList.add('is-loading');
+  }
+  if (actionRow) {
+    actionRow.querySelectorAll('.outcome-chip').forEach((btn) => {
+      btn.disabled = true;
+    });
+  }
+
   const payload = { [field]: value };
 
   if (field === 'pnlStatus') {
@@ -727,6 +739,14 @@ async function markStockOutcome(event, date, symbol, field, value) {
     await api.patch(\`/scan-history/\${date}/stocks/\${safeSymbol}/outcome\`, payload);
     await loadHistoryDetail(date);
   } catch (error) {
+    if (clickedBtn) {
+      clickedBtn.classList.remove('is-loading');
+    }
+    if (actionRow) {
+      actionRow.querySelectorAll('.outcome-chip').forEach((btn) => {
+        btn.disabled = false;
+      });
+    }
     customAlert.show({
       type: 'error',
       title: 'Update Failed',

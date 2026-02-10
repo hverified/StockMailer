@@ -1,6 +1,6 @@
 // src/templates/homepage.styles.js
 const css = `
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
 
 :root {
   --bg:#f3f5f8;
@@ -22,7 +22,7 @@ const css = `
 
 body {
   margin:0;
-  font-family:'Manrope','Segoe UI',Arial,sans-serif;
+  font-family:'IBM Plex Sans','Segoe UI',Arial,sans-serif;
   background:
     radial-gradient(circle at 10% 0%, rgba(59, 130, 246, 0.06), transparent 34%),
     radial-gradient(circle at 90% 20%, rgba(16, 185, 129, 0.04), transparent 30%),
@@ -31,6 +31,7 @@ body {
   min-height:100vh;
   letter-spacing:-0.01em;
   line-height:1.45;
+  font-feature-settings:"tnum" 1, "lnum" 1;
 }
 
 .container {
@@ -611,19 +612,21 @@ a.docs:hover {
 
 .outcome-chip {
   border:1px solid #dbe3f0;
-  background:#f8fafc;
+  background:linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   color:#334155;
-  border-radius:999px;
+  border-radius:10px;
   font-size:12px;
   font-weight:700;
-  padding:6px 10px;
-  min-height:30px;
+  padding:7px 10px;
+  min-height:34px;
   width:100%;
   transition:all 0.2s ease;
+  box-shadow:0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .outcome-chip:hover {
-  background:#f1f5f9;
+  background:linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border-color:#cdd8ea;
 }
 
 .outcome-chip.active {
@@ -654,6 +657,30 @@ a.docs:hover {
   border-color:#fecaca;
   background:#fef2f2;
   color:#991b1b;
+}
+
+.outcome-chip:disabled {
+  cursor:not-allowed;
+  opacity:0.7;
+}
+
+.outcome-chip.is-loading {
+  position:relative;
+  color:transparent !important;
+}
+
+.outcome-chip.is-loading::after {
+  content:'';
+  position:absolute;
+  width:14px;
+  height:14px;
+  border:2px solid #cbd5e1;
+  border-top-color:#1d4ed8;
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+  left:50%;
+  top:50%;
+  transform:translate(-50%, -50%);
 }
 
 .history-stock-card.is-selected {
