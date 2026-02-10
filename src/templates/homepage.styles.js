@@ -18,6 +18,15 @@ const css = `
   --border-strong:#c6d2e3;
   --shadow-sm:0 1px 2px rgba(15, 23, 42, 0.05);
   --shadow-md:0 10px 24px rgba(15, 23, 42, 0.08);
+  --radius-md:12px;
+  --radius-lg:16px;
+  --fs-xxs:11px;
+  --fs-xs:12px;
+  --fs-sm:13px;
+  --fs-md:14px;
+  --fs-lg:16px;
+  --fs-xl:20px;
+  --fs-2xl:28px;
 }
 
 body {
@@ -29,8 +38,8 @@ body {
     var(--bg);
   color:var(--text);
   min-height:100vh;
-  letter-spacing:-0.01em;
-  line-height:1.45;
+  letter-spacing:-0.005em;
+  line-height:1.5;
   font-feature-settings:"tnum" 1, "lnum" 1;
 }
 
@@ -48,15 +57,16 @@ body {
 }
 
 .header h1 {
-  font-size:32px;
+  font-size:var(--fs-2xl);
   font-weight:700;
-  letter-spacing:-0.04em;
+  letter-spacing:-0.03em;
   margin:0;
   color:#0b1b33;
+  line-height:1.1;
 }
 
 .header .date {
-  font-size:13px;
+  font-size:var(--fs-sm);
   font-weight:600;
   color:var(--muted);
   letter-spacing:0.01em;
@@ -83,16 +93,16 @@ body {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(247, 251, 255, 0.82));
   border:1px solid var(--border);
-  border-radius:14px;
+  border-radius:var(--radius-lg);
   box-shadow:var(--shadow-sm);
   backdrop-filter:blur(8px);
 }
 
 button,a {
   padding:10px 14px;
-  border-radius:10px;
+  border-radius:var(--radius-md);
   font-weight:600;
-  font-size:13px;
+  font-size:var(--fs-sm);
   border:1px solid var(--border);
   cursor:pointer;
   text-decoration:none;
@@ -100,6 +110,7 @@ button,a {
   color:#334155;
   transition:all 0.2s ease;
   box-shadow:none;
+  letter-spacing:0.01em;
 }
 
 .actions > button {
@@ -133,7 +144,7 @@ button,a {
 button:hover,a:hover {
   border-color:var(--border-strong);
   background:#f1f5f9;
-  transform:none;
+  transform:translateY(-0.5px);
   box-shadow:var(--shadow-sm);
 }
 
@@ -213,12 +224,12 @@ a.docs:hover {
 .grid {
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-  gap:16px;
+  gap:18px;
 }
 
 .card {
   background:var(--surface);
-  border-radius:14px;
+  border-radius:var(--radius-lg);
   border:1px solid var(--border);
   padding:18px 16px;
   box-shadow:
@@ -229,6 +240,9 @@ a.docs:hover {
 
 .card:hover {
   border-color:#cfd9e8;
+  box-shadow:
+    0 2px 8px rgba(15, 23, 42, 0.06),
+    0 14px 28px rgba(15, 23, 42, 0.09);
 }
 
 
@@ -274,21 +288,22 @@ a.docs:hover {
 
 .market-stock-name {
   font-weight:600;
+  font-size:var(--fs-md);
 }
 
 .market-stock-symbol {
   color:#0ea5e9;
-  font-size:12px;
+  font-size:var(--fs-xs);
 }
 
 .market-stock-price {
-  font-size:20px;
+  font-size:var(--fs-xl);
   font-weight:700;
   margin-top:6px;
 }
 
 .market-stock-change {
-  font-size:13px;
+  font-size:var(--fs-sm);
   font-weight:700;
   display:flex;
   align-items:center;
@@ -297,13 +312,13 @@ a.docs:hover {
 }
 
 .market-stock-volume {
-  font-size:13px;
+  font-size:var(--fs-sm);
   margin-top:6px;
 }
 
 .history-item {
   background:linear-gradient(180deg, var(--surface) 0%, var(--surface-blue) 100%);
-  border-radius:14px;
+  border-radius:var(--radius-lg);
   padding:18px;
   margin-bottom:16px;
   cursor:pointer;
@@ -355,7 +370,7 @@ a.docs:hover {
   align-items:center;
   padding:3px 8px;
   border-radius:999px;
-  font-size:10.5px;
+  font-size:var(--fs-xxs);
   font-weight:700;
   border:1px solid transparent;
 }
@@ -393,7 +408,7 @@ a.docs:hover {
 
 .history-date {
   font-weight:700;
-  font-size:16px;
+  font-size:17px;
   color:#0f172a;
   display:flex;
   align-items:center;
@@ -406,7 +421,7 @@ a.docs:hover {
   gap:4px;
   padding:4px 10px;
   border-radius:999px;
-  font-size:12px;
+  font-size:var(--fs-xs);
   font-weight:600;
   background:#f0fdf4;
   color:var(--success);
@@ -433,7 +448,7 @@ a.docs:hover {
   padding:8px;
   background:linear-gradient(180deg, #f8fafc 0%, #f3f7fc 100%);
   border:1px solid #e2e8f0;
-  border-radius:10px;
+  border-radius:var(--radius-md);
   transition:all 0.2s;
 }
 
@@ -443,7 +458,7 @@ a.docs:hover {
 }
 
 .history-stat-label {
-  font-size:11px;
+  font-size:10.5px;
   color:#64748b;
   font-weight:600;
   text-transform:uppercase;
@@ -452,7 +467,7 @@ a.docs:hover {
 }
 
 .history-stat-value {
-  font-size:15px;
+  font-size:var(--fs-lg);
   font-weight:700;
   color:#0f172a;
 }
@@ -483,7 +498,7 @@ a.docs:hover {
 
 .stock-count-extra {
   margin-left:3px;
-  font-size:11px;
+  font-size:var(--fs-xxs);
   font-weight:700;
   color:#1e3a8a;
 }
@@ -491,7 +506,7 @@ a.docs:hover {
 .report-wrap {
   background:linear-gradient(180deg, var(--surface) 0%, var(--surface-blue) 100%);
   border:1px solid var(--border);
-  border-radius:14px;
+  border-radius:var(--radius-lg);
   padding:16px;
   margin-bottom:16px;
   box-shadow:var(--shadow-sm);
@@ -507,12 +522,12 @@ a.docs:hover {
 
 .report-header h3 {
   margin:0;
-  font-size:16px;
+  font-size:17px;
   font-weight:700;
 }
 
 .report-header span {
-  font-size:12px;
+  font-size:var(--fs-xs);
   color:var(--muted);
   font-weight:600;
 }
@@ -532,7 +547,7 @@ a.docs:hover {
 
 .report-label {
   color:var(--muted);
-  font-size:11px;
+  font-size:10.5px;
   font-weight:600;
   text-transform:uppercase;
   letter-spacing:0.04em;
@@ -540,7 +555,7 @@ a.docs:hover {
 }
 
 .report-value {
-  font-size:19px;
+  font-size:21px;
   font-weight:700;
   color:var(--text);
 }
@@ -557,7 +572,7 @@ a.docs:hover {
   width:100%;
   overflow:auto;
   border:1px solid #e2e8f0;
-  border-radius:10px;
+  border-radius:var(--radius-md);
 }
 
 .report-table {
@@ -572,20 +587,24 @@ a.docs:hover {
   padding:10px 12px;
   text-align:left;
   border-bottom:1px solid #e2e8f0;
-  font-size:13px;
+  font-size:var(--fs-sm);
 }
 
 .report-table th {
   background:linear-gradient(180deg, #f8fafc 0%, #eef4fc 100%);
   color:#475569;
   font-weight:700;
-  font-size:12px;
+  font-size:var(--fs-xs);
   text-transform:uppercase;
   letter-spacing:0.04em;
 }
 
 .report-table tbody tr:hover {
   background:#f8fafc;
+}
+
+.report-table tbody tr:nth-child(even) {
+  background:#fbfdff;
 }
 
 .report-profit-cell {
@@ -614,8 +633,8 @@ a.docs:hover {
   border:1px solid #dbe3f0;
   background:linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   color:#334155;
-  border-radius:10px;
-  font-size:12px;
+  border-radius:var(--radius-md);
+  font-size:var(--fs-xs);
   font-weight:700;
   padding:7px 10px;
   min-height:34px;
@@ -685,7 +704,9 @@ a.docs:hover {
 
 .history-stock-card.is-selected {
   border-color:#93c5fd;
-  box-shadow:0 0 0 2px rgba(59, 130, 246, 0.15);
+  box-shadow:
+    0 0 0 2px rgba(59, 130, 246, 0.14),
+    0 10px 22px rgba(30, 64, 175, 0.08);
 }
 
 .history-stock-card.is-marked {
@@ -782,14 +803,15 @@ a.docs:hover {
 }
 
 .stock-price-value {
-  font-size:22px;
+  font-size:24px;
   font-weight:800;
   color:#020617;
+  letter-spacing:-0.02em;
 }
 
 .stock-change-line {
   margin-top:2px;
-  font-size:13px;
+  font-size:var(--fs-sm);
   font-weight:700;
   display:flex;
   align-items:center;
@@ -809,7 +831,7 @@ a.docs:hover {
   align-items:center;
   border-radius:999px;
   padding:4px 9px;
-  font-size:10.5px;
+  font-size:var(--fs-xxs);
   font-weight:700;
   line-height:1.2;
   border:1px solid transparent;
@@ -849,7 +871,7 @@ a.docs:hover {
 .status-saved {
   display:inline-flex;
   align-items:center;
-  font-size:10.5px;
+  font-size:var(--fs-xxs);
   font-weight:700;
   color:#1e3a8a;
   background:#eef2ff;
@@ -872,7 +894,7 @@ a.docs:hover {
 
 .outcome-updated {
   margin-top:6px;
-  font-size:11px;
+  font-size:var(--fs-xs);
   color:#64748b;
   font-weight:600;
 }
@@ -883,20 +905,20 @@ a.docs:hover {
 
 .stock-meta-name {
   font-weight:600;
-  font-size:15px;
+  font-size:17px;
   color:#020617;
 }
 
 .stock-meta-symbol {
   color:#1d4ed8;
-  font-size:12px;
+  font-size:var(--fs-sm);
   font-weight:600;
   margin-top:2px;
 }
 
 .stock-meta-date {
   margin-top:4px;
-  font-size:11px;
+  font-size:var(--fs-xs);
   color:#64748b;
   font-weight:600;
 }
@@ -941,6 +963,13 @@ a.docs:hover {
 .history-back-btn {
   padding:8px 16px;
   border-radius:8px;
+  background:linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border-color:#d6e1f0;
+}
+
+.history-back-btn:hover {
+  border-color:#bcd1ee;
+  background:linear-gradient(180deg, #f8fbff 0%, #eff6ff 100%);
 }
 
 .history-detail-list {
@@ -949,7 +978,7 @@ a.docs:hover {
 }
 
 .nifty-status-line {
-  font-size:15px;
+  font-size:var(--fs-lg);
   font-weight:600;
   margin-bottom:10px;
   display:flex;
@@ -965,17 +994,17 @@ a.docs:hover {
 }
 
 .nifty-stat-label {
-  font-size:11.5px;
+  font-size:var(--fs-xs);
   color:#6b7280;
 }
 
 .nifty-stat-value {
-  font-size:16.5px;
+  font-size:18px;
   font-weight:700;
 }
 
 .health-status-line {
-  font-size:15px;
+  font-size:var(--fs-lg);
   font-weight:600;
   margin-bottom:10px;
   display:flex;
@@ -992,12 +1021,12 @@ a.docs:hover {
 }
 
 .health-stat-label {
-  font-size:11.5px;
+  font-size:var(--fs-xs);
   color:#6b7280;
 }
 
 .health-stat-value {
-  font-size:16.5px;
+  font-size:18px;
   font-weight:700;
 }
 
@@ -1073,7 +1102,7 @@ a.docs:hover {
 }
 
 .custom-alert-title {
-  font-size:22px;
+  font-size:24px;
   font-weight:700;
   text-align:center;
   margin-bottom:12px;
@@ -1081,7 +1110,7 @@ a.docs:hover {
 }
 
 .custom-alert-message {
-  font-size:15px;
+  font-size:var(--fs-md);
   text-align:center;
   color:#64748b;
   line-height:1.6;
@@ -1108,13 +1137,13 @@ a.docs:hover {
 }
 
 .custom-alert-detail-label {
-  font-size:13px;
+  font-size:var(--fs-sm);
   color:#64748b;
   font-weight:500;
 }
 
 .custom-alert-detail-value {
-  font-size:13px;
+  font-size:var(--fs-sm);
   color:#0f172a;
   font-weight:700;
 }
@@ -1124,7 +1153,7 @@ a.docs:hover {
   padding:14px;
   border:none;
   border-radius:12px;
-  font-size:15px;
+  font-size:var(--fs-md);
   font-weight:600;
   cursor:pointer;
   transition:all 0.2s;
@@ -1151,13 +1180,23 @@ a.docs:hover {
   }
 }
 
+@media (max-width: 1024px) {
+  .container {
+    padding:28px 20px;
+  }
+
+  .grid {
+    gap:14px;
+  }
+}
+
 @media (max-width: 768px) {
   .container {
     padding:20px 16px;
   }
   
   .header h1 {
-    font-size:26px;
+    font-size:24px;
   }
   
   .actions {
@@ -1184,7 +1223,7 @@ a.docs:hover {
   
   button,a {
     padding:9px 12px;
-    font-size:13px;
+    font-size:var(--fs-xs);
   }
   
   .history-item {
@@ -1200,7 +1239,7 @@ a.docs:hover {
   }
   
   .history-date {
-    font-size:14px;
+    font-size:15px;
   }
   
   .history-stock-count {
@@ -1214,7 +1253,7 @@ a.docs:hover {
   }
 
   .history-outcome-pill {
-    font-size:9.5px;
+    font-size:10px;
     padding:3px 7px;
   }
 
@@ -1292,12 +1331,12 @@ a.docs:hover {
   }
 
   .history-stock-card .history-stats.day-metrics .history-stat-label {
-    font-size:9px;
+    font-size:9.5px;
     letter-spacing:0.25px;
   }
 
   .history-stock-card .history-stats.day-metrics .history-stat-value {
-    font-size:12px;
+    font-size:13px;
   }
 
   .history-stock-card .history-stats.trade-levels {
@@ -1309,12 +1348,12 @@ a.docs:hover {
   }
 
   .history-stock-card .history-stats.trade-levels .history-stat-label {
-    font-size:9px;
+    font-size:9.5px;
     letter-spacing:0.25px;
   }
 
   .history-stock-card .history-stats.trade-levels .history-stat-value {
-    font-size:12px;
+    font-size:13px;
   }
 
   .stock-price-block {
@@ -1338,12 +1377,12 @@ a.docs:hover {
 
   .status-badge,
   .status-saved {
-    font-size:10px;
+    font-size:10.5px;
     padding:3px 7px;
   }
 
   .outcome-updated {
-    font-size:10px;
+    font-size:10.5px;
   }
   
   .history-stat {
@@ -1351,16 +1390,16 @@ a.docs:hover {
   }
   
   .history-stat-label {
-    font-size:10px;
+    font-size:10.5px;
     margin-bottom:3px;
   }
-  
+
   .history-stat-value {
-    font-size:13px;
+    font-size:14px;
   }
-  
+
   .history-badge {
-    font-size:11px;
+    font-size:var(--fs-xs);
     padding:3px 8px;
   }
     .history-stock-card .history-stat {
