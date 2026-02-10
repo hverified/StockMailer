@@ -135,7 +135,16 @@ async function runDailyTask() {
       // Continue even if database save fails
     }
 
-    await emailService.sendStockReport(filteredStocks, niftyData);
+    if (filteredStocks.length > 0) {
+      await emailService.sendStockReport(filteredStocks, niftyData);
+      logger.info(
+        `📧 Email sent for ${filteredStocks.length} shortlisted stock${
+          filteredStocks.length === 1 ? "" : "s"
+        }.`
+      );
+    } else {
+      logger.info("📭 No shortlisted stocks. Skipping scheduled email.");
+    }
 
     logger.info("✅ Daily task completed successfully");
   } catch (error) {
