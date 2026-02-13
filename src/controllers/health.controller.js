@@ -5,8 +5,6 @@
  */
 
 const logger = require("../utils/logger");
-const { asyncHandler } = require("../middleware/error-handler.middleware");
-const FormatUtil = require("../utils/format.util");
 
 class HealthController {
   constructor() {

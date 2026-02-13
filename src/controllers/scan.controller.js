@@ -8,10 +8,7 @@ const ChartinkScraper = require("../services/scraper.service");
 const MarketDataService = require("../services/market.service");
 const StockDBService = require("../services/stock.db.service");
 const logger = require("../utils/logger");
-const {
-  asyncHandler,
-  AppError,
-} = require("../middleware/error-handler.middleware");
+const { AppError } = require("../middleware/error-handler.middleware");
 
 class ScanController {
   constructor() {
