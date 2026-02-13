@@ -18,6 +18,10 @@ const EmailService = require("./services/email.service");
 const MarketDataService = require("./services/market.service");
 const StockDBService = require("./services/stock.db.service");
 const homepageRoutes = require("./routes/homepage.routes");
+const {
+  cookieParser,
+  attachCurrentUser,
+} = require("./middleware/auth.middleware");
 
 // Import error handling middleware
 const {
@@ -33,6 +37,8 @@ const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser);
+app.use(attachCurrentUser);
 
 // Request logging middleware
 app.use((req, res, next) => {

@@ -9,8 +9,10 @@ const healthController = require("../controllers/health.controller");
 const scanController = require("../controllers/scan.controller");
 const historyController = require("../controllers/history.controller");
 const viewController = require("../controllers/view.controller");
+const authController = require("../controllers/auth.controller");
 const { ensureDbConnection } = require("../middleware/db.middleware");
 const { asyncHandler } = require("../middleware/error-handler.middleware");
+const { requireAuth } = require("../middleware/auth.middleware");
 
 const router = express.Router();
 
@@ -19,6 +21,40 @@ const router = express.Router();
  * @desc Render homepage
  */
 router.get("/", viewController.renderHomepage);
+
+// ============================================
+// Auth Routes
+// ============================================
+
+router.post(
+  "/auth/signup",
+  ensureDbConnection,
+  asyncHandler(authController.signUp)
+);
+
+router.post(
+  "/auth/signin",
+  ensureDbConnection,
+  asyncHandler(authController.signIn)
+);
+
+router.post(
+  "/auth/signout",
+  ensureDbConnection,
+  asyncHandler(authController.signOut)
+);
+
+router.get(
+  "/auth/me",
+  ensureDbConnection,
+  asyncHandler(authController.me)
+);
+
+router.post(
+  "/auth/forgot-password",
+  ensureDbConnection,
+  asyncHandler(authController.forgotPassword)
+);
 
 /**
  * @route GET /health
@@ -34,7 +70,11 @@ router.get("/health", healthController.getHealth);
  * @route GET /test-scrape
  * @desc Test stock scraping from Chartink
  */
-router.get("/test-scrape", asyncHandler(scanController.testScrape));
+router.get(
+  "/test-scrape",
+  requireAuth,
+  asyncHandler(scanController.testScrape)
+);
 
 /**
  * @route GET /nifty-status
@@ -44,6 +84,7 @@ router.get("/test-scrape", asyncHandler(scanController.testScrape));
 router.get(
   "/nifty-status",
   ensureDbConnection,
+  requireAuth,
   asyncHandler(scanController.getNiftyStatus)
 );
 
@@ -55,6 +96,7 @@ router.get(
 router.post(
   "/manual-scan",
   ensureDbConnection,
+  requireAuth,
   asyncHandler(scanController.runManualScan)
 );
 
@@ -71,6 +113,7 @@ router.post(
 router.get(
   "/scan-history",
   ensureDbConnection,
+  requireAuth,
   asyncHandler(historyController.getScanHistory)
 );
 
@@ -83,6 +126,7 @@ router.get(
 router.get(
   "/scan-history/:date",
   ensureDbConnection,
+  requireAuth,
   asyncHandler(historyController.getScanHistoryByDate)
 );
 
@@ -95,6 +139,7 @@ router.get(
 router.get(
   "/scan-history/:date/report",
   ensureDbConnection,
+  requireAuth,
   asyncHandler(historyController.getDateOutcomeReport)
 );
 
@@ -108,6 +153,7 @@ router.get(
 router.patch(
   "/scan-history/:date/stocks/:symbol/outcome",
   ensureDbConnection,
+  requireAuth,
   asyncHandler(historyController.updateStockOutcome)
 );
 
@@ -120,6 +166,7 @@ router.patch(
 router.get(
   "/stocks-report",
   ensureDbConnection,
+  requireAuth,
   asyncHandler(historyController.getAggregateOutcomeReport)
 );
 
@@ -133,6 +180,7 @@ router.get(
 router.get(
   "/stock-history/:symbol",
   ensureDbConnection,
+  requireAuth,
   asyncHandler(historyController.getStockHistoryBySymbol)
 );
 

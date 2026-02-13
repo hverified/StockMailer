@@ -22,9 +22,16 @@ function generate() {
   <body>
     <div class="container">
       <header class="header">
-        <h1 id="greeting"></h1>
-        <div class="date" id="dateLine"></div>
+        <div class="header-top">
+          <div>
+            <h1 id="greeting"></h1>
+            <div class="date" id="dateLine"></div>
+          </div>
+          <div id="authControls"></div>
+        </div>
       </header>
+
+      <div id="authPanel"></div>
 
       <div class="actions">
         <button class="secondary" id="historyBtn" onclick="loadHistory()">

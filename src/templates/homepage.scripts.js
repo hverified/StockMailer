@@ -68,7 +68,14 @@ const utils = {
       hour: '2-digit',
       minute: '2-digit'
     });
-  }
+  },
+
+  escapeHtml: (value) => String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
 };
 
 // DOM Functions
@@ -92,6 +99,20 @@ const dom = {
   showLoader: (count = 3) => {
     const skeletons = Array(count).fill('<div class="skeleton"></div>').join('');
     dom.setContent(skeletons);
+  },
+
+  hideMainSections: () => {
+    const actions = document.querySelector('.actions');
+    const content = dom.get('content');
+    if (actions) actions.style.display = 'none';
+    if (content) content.style.display = 'none';
+  },
+
+  showMainSections: () => {
+    const actions = document.querySelector('.actions');
+    const content = dom.get('content');
+    if (actions) actions.style.display = '';
+    if (content) content.style.display = '';
   }
 };
 
@@ -159,7 +180,7 @@ const iconClass = type;
 
 // Greeting Functions
 const greeting = {
-  set: () => {
+  set: (name = 'Trader') => {
     const hour = new Date().getHours();
     const greetings = {
       morning: hour >= 5 && hour < 12 ? 'Good morning' : null,
@@ -168,7 +189,7 @@ const greeting = {
     };
     
     const text = greetings.morning || greetings.afternoon || greetings.evening || 'Welcome back';
-    dom.get('greeting').innerText = text + ', Khalid';
+    dom.get('greeting').innerText = text + ', ' + name;
     dom.get('dateLine').innerText = utils.getCurrentDate();
   }
 };
@@ -178,8 +199,24 @@ const api = {
   fetch: async (url, options = {}) => {
     try {
       const response = await fetch(url, options);
-      if (!response.ok) throw new Error(\`HTTP \${response.status}\`);
-      return await response.json();
+      const contentType = response.headers.get('content-type') || '';
+      const payload = contentType.includes('application/json')
+        ? await response.json()
+        : {};
+
+      if (!response.ok) {
+        const message = payload?.error || payload?.message || \`HTTP \${response.status}\`;
+        if (response.status === 401 && typeof auth !== 'undefined') {
+          auth.setUser(null);
+          auth.renderControls();
+          auth.renderPanel('signin');
+        }
+        const err = new Error(message);
+        err.status = response.status;
+        throw err;
+      }
+
+      return payload;
     } catch (error) {
       console.error('API Error:', error);
       throw error;
@@ -198,6 +235,232 @@ const api = {
     body: JSON.stringify(body)
   })
 };
+
+const auth = {
+  user: null,
+
+  setUser: (user) => {
+    auth.user = user || null;
+    if (auth.user?.name) {
+      greeting.set(auth.user.name);
+    } else {
+      greeting.set('Trader');
+    }
+  },
+
+  renderControls: () => {
+    const container = dom.get('authControls');
+    if (!container) return;
+
+    if (!auth.user) {
+      container.innerHTML = '';
+      return;
+    }
+
+    container.innerHTML = \`
+      <div class="auth-controls">
+        <span class="auth-user-pill">\${utils.escapeHtml(auth.user.name)}</span>
+        <button class="secondary auth-logout-btn" onclick="auth.handleSignOut()">Logout</button>
+      </div>
+    \`;
+  },
+
+  renderPanel: (mode = 'signin') => {
+    const panel = dom.get('authPanel');
+    if (!panel) return;
+
+    if (auth.user) {
+      panel.innerHTML = '';
+      panel.style.display = 'none';
+      dom.showMainSections();
+      return;
+    }
+
+    panel.style.display = '';
+    dom.hideMainSections();
+
+    const isSignin = mode === 'signin';
+
+    panel.innerHTML = \`
+      <div class="auth-shell">
+        <div class="auth-visual">
+          <div class="auth-visual-badge">Tradewise</div>
+          <h3>\${isSignin ? 'Trade with clarity.' : 'Build your edge.'}</h3>
+          <p>\${isSignin ? 'Access scan history, reports and market signals in one place.' : 'Start tracking shortlisted opportunities with your personal workspace.'}</p>
+        </div>
+
+        <div class="auth-card">
+          <div class="auth-head">
+            <div class="auth-kicker">Account</div>
+            <h2>\${isSignin ? 'Welcome back' : 'Create your account'}</h2>
+            <p>\${isSignin ? 'Sign in to continue.' : 'Sign up with your name, username and password.'}</p>
+          </div>
+
+          <div class="auth-switch">
+            <button type="button" class="auth-switch-btn \${isSignin ? 'active' : ''}" onclick="auth.renderPanel('signin')">Sign in</button>
+            <button type="button" class="auth-switch-btn \${!isSignin ? 'active' : ''}" onclick="auth.renderPanel('signup')">Sign up</button>
+          </div>
+
+          <form id="authForm" class="auth-form" onsubmit="auth.handleSubmit(event)">
+            \${isSignin ? '' : '<label>Name</label><input id="authName" type="text" required maxlength="80" placeholder="Enter your full name" />'}
+            <label>Username</label>
+            <input id="authUsername" type="text" required maxlength="40" autocomplete="username" placeholder="Enter username" />
+
+            <label>Password</label>
+            <input id="authPassword" type="password" required minlength="5" autocomplete="\${isSignin ? 'current-password' : 'new-password'}" placeholder="Minimum 5 characters" />
+            <div class="auth-password-hint">Password must be at least 5 characters.</div>
+
+            <label class="auth-remember">
+              <input id="authRemember" type="checkbox" checked />
+              <span>Keep me signed in</span>
+            </label>
+
+            <button class="auth-submit-btn" type="submit">\${isSignin ? 'Sign In' : 'Create Account'}</button>
+          </form>
+
+          <div class="auth-links">
+            <button class="link-btn" onclick="auth.renderForgotPanel()">Forgot password?</button>
+          </div>
+        </div>
+      </div>
+    \`;
+  },
+
+  renderForgotPanel: () => {
+    const panel = dom.get('authPanel');
+    if (!panel) return;
+
+    panel.style.display = '';
+    dom.hideMainSections();
+
+    panel.innerHTML = \`
+      <div class="auth-shell">
+        <div class="auth-visual">
+          <div class="auth-visual-badge">Security</div>
+          <h3>Recover access safely.</h3>
+          <p>Reset your password and sign in again to continue using Tradewise.</p>
+        </div>
+
+        <div class="auth-card">
+          <div class="auth-head">
+            <div class="auth-kicker">Recovery</div>
+            <h2>Reset password</h2>
+            <p>Enter your username and set a new password.</p>
+          </div>
+
+          <form id="forgotForm" class="auth-form" onsubmit="auth.handleForgotPassword(event)">
+            <label>Username</label>
+            <input id="forgotUsername" type="text" required maxlength="40" autocomplete="username" placeholder="Enter username" />
+
+            <label>New password</label>
+            <input id="forgotPassword" type="password" required minlength="5" autocomplete="new-password" placeholder="Minimum 5 characters" />
+            <div class="auth-password-hint">Password must be at least 5 characters.</div>
+
+            <button class="auth-submit-btn" type="submit">Reset Password</button>
+          </form>
+
+          <div class="auth-links">
+            <button class="link-btn" onclick="auth.renderPanel('signin')">Back to sign in</button>
+          </div>
+        </div>
+      </div>
+    \`;
+  },
+
+  handleSubmit: async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const isSignup = !!dom.get('authName');
+
+    const body = {
+      username: dom.get('authUsername')?.value?.trim(),
+      password: dom.get('authPassword')?.value || '',
+      rememberMe: dom.get('authRemember')?.checked !== false
+    };
+
+    if (isSignup) {
+      body.name = dom.get('authName')?.value?.trim();
+    }
+
+    const endpoint = isSignup ? '/auth/signup' : '/auth/signin';
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+
+    try {
+      const data = await api.post(endpoint, body);
+      auth.setUser(data.user);
+      auth.renderControls();
+      auth.renderPanel();
+      await loadHistory();
+    } catch (error) {
+      customAlert.show({
+        type: 'error',
+        title: isSignup ? 'Signup failed' : 'Signin failed',
+        message: error.message || 'Unable to authenticate'
+      });
+    } finally {
+      submitBtn.disabled = false;
+    }
+  },
+
+  handleForgotPassword: async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+
+    try {
+      await api.post('/auth/forgot-password', {
+        username: dom.get('forgotUsername')?.value?.trim(),
+        newPassword: dom.get('forgotPassword')?.value || ''
+      });
+
+      customAlert.show({
+        type: 'success',
+        title: 'Password reset complete',
+        message: 'Use your new password to sign in.'
+      });
+      auth.renderPanel('signin');
+    } catch (error) {
+      customAlert.show({
+        type: 'error',
+        title: 'Reset failed',
+        message: error.message || 'Unable to reset password'
+      });
+    } finally {
+      submitBtn.disabled = false;
+    }
+  },
+
+  handleSignOut: async () => {
+    try {
+      await api.post('/auth/signout');
+    } catch (error) {
+      console.warn('Signout request failed', error);
+    } finally {
+      auth.setUser(null);
+      auth.renderControls();
+      auth.renderPanel('signin');
+      dom.setContent('');
+    }
+  },
+
+  bootstrap: async () => {
+    try {
+      const data = await api.get('/auth/me');
+      auth.setUser(data.user);
+      auth.renderControls();
+      auth.renderPanel();
+      await loadHistory();
+    } catch (error) {
+      auth.setUser(null);
+      auth.renderControls();
+      auth.renderPanel('signin');
+    }
+  }
+};
+
+window.auth = auth;
 
 // Component Generators
 const components = {
@@ -343,66 +606,74 @@ async function loadHealth() {
   dom.setActive('healthBtn');
   dom.showLoader(1);
   await utils.sleep(300);
-  
-  const data = await api.get('/health');
-  const isUp = data.status === 'UP';
-  const bg = isUp ? 'linear-gradient(135deg,#f0fdf4,#dcfce7)' : 'linear-gradient(135deg,#fef2f2,#fee2e2)';
-  const border = isUp ? '#86efac' : '#fca5a5';
-  const title = isUp ? '#166534' : '#991b1b';
-  const val = isUp ? '#15803d' : '#b91c1c';
-  
-  const statusIcon = isUp
-    ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>'
-    : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
-  
-  const uptimeSeconds = parseFloat(data.uptime) || 0;
-  const uptimeMinutes = uptimeSeconds / 60;
-  const uptimeHours = uptimeMinutes / 60;
-  
-  let uptimeDisplay = '';
-  if (uptimeHours >= 1) {
-    uptimeDisplay = \`\${uptimeHours.toFixed(1)} hrs\`;
-  } else {
-    uptimeDisplay = \`\${uptimeMinutes.toFixed(1)} min\`;
-  }
-  
-  const memoryBytes = parseFloat(data.memory) || 0;
-  const memoryMB = memoryBytes / (1024 * 1024);
-  const memoryGB = memoryMB / 1024;
-  
-  let memoryDisplay = '';
-  if (memoryGB >= 1) {
-    memoryDisplay = \`\${memoryGB.toFixed(2)} GB\`;
-  } else {
-    memoryDisplay = \`\${memoryMB.toFixed(1)} MB\`;
-  }
-  
-  dom.setContent(\`
-    <div class="card health-card">
+
+  try {
+    const data = await api.get('/health');
+    const isUp = data.status === 'UP';
+    const bg = isUp ? 'linear-gradient(135deg,#f0fdf4,#dcfce7)' : 'linear-gradient(135deg,#fef2f2,#fee2e2)';
+    const border = isUp ? '#86efac' : '#fca5a5';
+    const title = isUp ? '#166534' : '#991b1b';
+    const val = isUp ? '#15803d' : '#b91c1c';
     
-      <div class="health-status-line" style="color:\${title};">
-        <span class="inline-icon" style="color:\${val};">\${statusIcon}</span>
-        <span>System \${isUp ? 'Operational' : 'Attention Needed'}</span>
+    const statusIcon = isUp
+      ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>'
+      : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+    
+    const uptimeSeconds = parseFloat(data.uptime) || 0;
+    const uptimeMinutes = uptimeSeconds / 60;
+    const uptimeHours = uptimeMinutes / 60;
+    
+    let uptimeDisplay = '';
+    if (uptimeHours >= 1) {
+      uptimeDisplay = \`\${uptimeHours.toFixed(1)} hrs\`;
+    } else {
+      uptimeDisplay = \`\${uptimeMinutes.toFixed(1)} min\`;
+    }
+    
+    const memoryBytes = parseFloat(data.memory) || 0;
+    const memoryMB = memoryBytes / (1024 * 1024);
+    const memoryGB = memoryMB / 1024;
+    
+    let memoryDisplay = '';
+    if (memoryGB >= 1) {
+      memoryDisplay = \`\${memoryGB.toFixed(2)} GB\`;
+    } else {
+      memoryDisplay = \`\${memoryMB.toFixed(1)} MB\`;
+    }
+    
+    dom.setContent(\`
+      <div class="card health-card">
+      
+        <div class="health-status-line" style="color:\${title};">
+          <span class="inline-icon" style="color:\${val};">\${statusIcon}</span>
+          <span>System \${isUp ? 'Operational' : 'Attention Needed'}</span>
+        </div>
+        <table width="100%">
+          <tr>
+            <td class="health-stat-cell">
+              <div class="health-stat-label">Uptime</div>
+              <div class="health-stat-value" style="color:\${val};">
+                \${uptimeDisplay}
+              </div>
+            </td>
+            <td width="12"></td>
+            <td class="health-stat-cell">
+              <div class="health-stat-label">Memory</div>
+              <div class="health-stat-value" style="color:\${val};">
+                \${memoryDisplay}
+              </div>
+            </td>
+          </tr>
+        </table>
       </div>
-      <table width="100%">
-        <tr>
-          <td class="health-stat-cell">
-            <div class="health-stat-label">Uptime</div>
-            <div class="health-stat-value" style="color:\${val};">
-              \${uptimeDisplay}
-            </div>
-          </td>
-          <td width="12"></td>
-          <td class="health-stat-cell">
-            <div class="health-stat-label">Memory</div>
-            <div class="health-stat-value" style="color:\${val};">
-              \${memoryDisplay}
-            </div>
-          </td>
-        </tr>
-      </table>
-    </div>
-  \`);
+    \`);
+  } catch (error) {
+    dom.setContent(components.emptyState(
+      '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>',
+      'Health Check Failed',
+      error.message || 'Could not load health data.'
+    ));
+  }
 }
 async function loadMarketScan() {
   dom.setActive('scanBtn');
@@ -450,20 +721,21 @@ async function loadHistory() {
   dom.setActive('historyBtn');
   dom.showLoader(2);
   await utils.sleep(300);
-  
-  const data = await api.get('/scan-history');
-  dom.setContent('');
-  
-  if (!data.success || !data.dates || data.dates.length === 0) {
-    dom.addContent(components.emptyState(
-      '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>',
-      'No History Yet',
-      'Run a scan to start building history'
-    ));
-    return;
-  }
-  
-  const historyHtml = data.dates.map(d => {
+
+  try {
+    const data = await api.get('/scan-history');
+    dom.setContent('');
+    
+    if (!data.success || !data.dates || data.dates.length === 0) {
+      dom.addContent(components.emptyState(
+        '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>',
+        'No History Yet',
+        'Run a scan to start building history'
+      ));
+      return;
+    }
+    
+    const historyHtml = data.dates.map(d => {
     if (!d.date) {
       console.warn('Invalid date in history item:', d);
       return '';
@@ -517,9 +789,16 @@ async function loadHistory() {
         </div>
       </div>
     \`;
-  }).filter(Boolean).join('');
-  
-  dom.addContent('<div>' + historyHtml + '</div>');
+    }).filter(Boolean).join('');
+    
+    dom.addContent('<div>' + historyHtml + '</div>');
+  } catch (error) {
+    dom.setContent(components.emptyState(
+      '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>',
+      'History Unavailable',
+      error.message || 'Could not load scan history.'
+    ));
+  }
 }
 
 async function loadHistoryDetail(date) {
@@ -822,8 +1101,8 @@ async function runManualScan() {
 
 // Initialize
 window.addEventListener('load', () => {
-  greeting.set();
-  loadHistory();
+  greeting.set('Trader');
+  auth.bootstrap();
 });
 `;
 

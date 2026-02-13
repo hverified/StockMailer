@@ -53,6 +53,10 @@ class MongoDB {
       // Nifty50 collection indexes
       await db.collection('nifty50').createIndex({ date: 1 }, { unique: true });
       await db.collection('nifty50').createIndex({ date: -1 });
+
+      // Users collection indexes
+      await db.collection('users').createIndex({ username: 1 }, { unique: true });
+      await db.collection('users').createIndex({ 'sessions.tokenHash': 1 });
       
       logger.info('✅ MongoDB indexes created');
     } catch (error) {
