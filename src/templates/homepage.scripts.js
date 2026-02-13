@@ -259,10 +259,48 @@ const auth = {
 
     container.innerHTML = \`
       <div class="auth-controls">
-        <span class="auth-user-pill">\${utils.escapeHtml(auth.user.name)}</span>
-        <button class="secondary auth-logout-btn" onclick="auth.handleSignOut()">Logout</button>
+        <button class="profile-menu-trigger" onclick="auth.toggleProfileMenu(event)">
+          <span class="profile-avatar">\${utils.escapeHtml((auth.user.name || 'U').charAt(0).toUpperCase())}</span>
+          <span class="profile-name">\${utils.escapeHtml(auth.user.name)}</span>
+          <span class="profile-caret">▾</span>
+        </button>
+
+        <div id="profileMenu" class="profile-menu hidden">
+          <div class="profile-menu-head">
+            <div class="profile-menu-name">\${utils.escapeHtml(auth.user.name)}</div>
+            <div class="profile-menu-username">@\${utils.escapeHtml(auth.user.username || '')}</div>
+          </div>
+          <button class="profile-menu-item" onclick="auth.showProfile()">Profile</button>
+          <button class="profile-menu-item danger" onclick="auth.handleSignOut()">Logout</button>
+        </div>
       </div>
     \`;
+  },
+
+  toggleProfileMenu: (event) => {
+    event.stopPropagation();
+    const menu = dom.get('profileMenu');
+    if (!menu) return;
+    menu.classList.toggle('hidden');
+  },
+
+  hideProfileMenu: () => {
+    const menu = dom.get('profileMenu');
+    if (menu) menu.classList.add('hidden');
+  },
+
+  showProfile: () => {
+    auth.hideProfileMenu();
+    if (!auth.user) return;
+    customAlert.show({
+      type: 'info',
+      title: 'Profile',
+      message: 'Your account details',
+      details: {
+        Name: utils.escapeHtml(auth.user.name || ''),
+        Username: '@' + utils.escapeHtml(auth.user.username || '')
+      }
+    });
   },
 
   renderPanel: (mode = 'signin') => {
@@ -461,6 +499,7 @@ const auth = {
 };
 
 window.auth = auth;
+document.addEventListener('click', () => auth.hideProfileMenu());
 
 // Component Generators
 const components = {

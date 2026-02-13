@@ -1494,6 +1494,7 @@ button.active .icon-history {
   display:flex;
   align-items:center;
   gap:8px;
+  position:relative;
 }
 
 .auth-user-pill {
@@ -1725,6 +1726,7 @@ button.active .icon-history {
 }
 
 .auth-submit-btn:hover {
+  background:linear-gradient(135deg,#1d4ed8,#2563eb,#0ea5e9);
   transform:translateY(-1px);
   box-shadow:0 13px 26px rgba(37, 99, 235, 0.32);
 }
@@ -1751,6 +1753,156 @@ button.active .icon-history {
   text-decoration:underline;
   box-shadow:none;
   transform:none;
+}
+
+.profile-menu-trigger {
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  border:1px solid #c9d8ee;
+  background:linear-gradient(180deg,#ffffff,#f5f9ff);
+  border-radius:999px;
+  padding:6px 10px 6px 6px;
+  min-height:40px;
+}
+
+.profile-avatar {
+  width:28px;
+  height:28px;
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  font-weight:700;
+  color:#fff;
+  background:linear-gradient(135deg,#2563eb,#1d4ed8);
+}
+
+.profile-name {
+  font-size:12px;
+  font-weight:700;
+  color:#1e3a8a;
+  max-width:140px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.profile-caret {
+  font-size:11px;
+  color:#4f6b92;
+}
+
+.profile-menu {
+  position:absolute;
+  top:48px;
+  right:0;
+  width:220px;
+  background:#fff;
+  border:1px solid #d8e3f2;
+  border-radius:14px;
+  padding:8px;
+  box-shadow:0 14px 28px rgba(15, 23, 42, 0.14);
+  z-index:20;
+}
+
+.profile-menu.hidden {
+  display:none;
+}
+
+.profile-menu-head {
+  padding:7px 8px 10px;
+  border-bottom:1px solid #e6edf6;
+  margin-bottom:6px;
+}
+
+.profile-menu-name {
+  font-size:13px;
+  font-weight:700;
+  color:#0f2b56;
+}
+
+.profile-menu-username {
+  font-size:12px;
+  color:#5b7295;
+}
+
+.profile-menu-item {
+  width:100%;
+  text-align:left;
+  border:none;
+  background:transparent;
+  border-radius:10px;
+  padding:9px 10px;
+  font-size:13px;
+  font-weight:600;
+  color:#1d3558;
+}
+
+.profile-menu-item:hover {
+  background:#eff5ff;
+  transform:none;
+  box-shadow:none;
+}
+
+.profile-menu-item.danger {
+  color:#b91c1c;
+}
+
+/* Premium refresh for homepage and tab views */
+.container {
+  max-width:1200px;
+}
+
+.actions {
+  border:1px solid #d4e0f0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(243, 248, 255, 0.88));
+  box-shadow:
+    0 1px 3px rgba(15, 23, 42, 0.05),
+    0 10px 24px rgba(15, 23, 42, 0.07);
+}
+
+.actions > button {
+  border-radius:11px;
+  min-height:44px;
+}
+
+#manualScanBtn {
+  background:linear-gradient(135deg,#1d4ed8,#2563eb,#0ea5e9);
+  color:#fff;
+  border:none;
+  box-shadow:0 10px 20px rgba(37, 99, 235, 0.24);
+}
+
+#manualScanBtn:hover {
+  background:linear-gradient(135deg,#1d4ed8,#2563eb,#0ea5e9);
+  color:#fff;
+}
+
+.card,
+.history-item,
+.report-wrap {
+  border:1px solid #d8e3f2;
+  box-shadow:
+    0 1px 3px rgba(15, 23, 42, 0.05),
+    0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.market-stock-card,
+.history-stock-card {
+  background:linear-gradient(180deg,#ffffff,#f8fbff);
+}
+
+.stock-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:14px;
+}
+
+.empty-state {
+  background:linear-gradient(180deg,#ffffff,#f5f9ff);
 }
 
 @media (max-width: 768px) {
@@ -1805,6 +1957,12 @@ button.active .icon-history {
 
   .auth-controls {
     justify-content:space-between;
+  }
+
+  .profile-menu {
+    right:auto;
+    left:0;
+    width:min(260px, 86vw);
   }
 
   .auth-user-pill {
