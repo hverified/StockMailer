@@ -52,8 +52,11 @@ module.exports = async (req, res) => {
     logger.info('💾 Saving scan results to database...');
     await stockDBService.saveStocks(filteredStocks, niftyData);
     
-    // Send email
-    await emailService.sendStockReport(filteredStocks, niftyData);
+    // Send email only when shortlisted stocks are available
+    const emailResult = await emailService.sendStockReport(
+      filteredStocks,
+      niftyData
+    );
     
     logger.info('✅ Vercel cron job completed successfully');
     
@@ -66,7 +69,8 @@ module.exports = async (req, res) => {
         isAboveEMA: niftyData.isAboveEMA
       },
       stocksScraped: stocks.length,
-      stocksIncluded: filteredStocks.length
+      stocksIncluded: filteredStocks.length,
+      emailSent: !emailResult.skipped
     });
   } catch (error) {
     logger.error(`❌ Vercel cron job failed: ${error.message}`);

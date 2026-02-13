@@ -17,7 +17,20 @@ class EmailService {
     });
   }
 
+  hasStocksToReport(stocks) {
+    return Array.isArray(stocks) && stocks.length > 0;
+  }
+
   async sendStockReport(stocks, niftyData) {
+    if (!this.hasStocksToReport(stocks)) {
+      logger.info("📭 No shortlisted stocks. Skipping email send.");
+      return {
+        success: true,
+        skipped: true,
+        reason: "No shortlisted stocks",
+      };
+    }
+
     try {
       const mailOptions = {
         from: config.email.user,
@@ -38,6 +51,15 @@ class EmailService {
   }
 
   async sendMorningStockReport(stocks, niftyData) {
+    if (!this.hasStocksToReport(stocks)) {
+      logger.info("📭 No shortlisted stocks. Skipping morning email send.");
+      return {
+        success: true,
+        skipped: true,
+        reason: "No shortlisted stocks",
+      };
+    }
+
     try {
       const mailOptions = {
         from: config.email.user,

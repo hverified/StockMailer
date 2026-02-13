@@ -74,12 +74,18 @@ router.post(
       logger.info("Nifty below EMA - excluding all stocks");
     }
 
-    // Send email
-    await emailService.sendStockReport(filteredStocks, niftyData);
+    // Send email only when shortlisted stocks are available
+    const emailResult = await emailService.sendStockReport(
+      filteredStocks,
+      niftyData
+    );
 
     res.json({
       success: true,
-      message: "Report generated and sent successfully",
+      message: emailResult.skipped
+        ? "Report generated. No shortlisted stocks, email skipped"
+        : "Report generated and sent successfully",
+      emailSent: !emailResult.skipped,
       niftyAboveEMA: niftyData.isAboveEMA,
       niftyPrice: niftyData.currentPrice,
       ema20: niftyData.ema20,
@@ -117,12 +123,18 @@ router.post(
       stocks
     );
 
-    // Send morning email
-    await emailService.sendMorningStockReport(enrichedStocks, niftyData);
+    // Send morning email only when shortlisted stocks are available
+    const emailResult = await emailService.sendMorningStockReport(
+      enrichedStocks,
+      niftyData
+    );
 
     res.json({
       success: true,
-      message: "Morning report generated and sent successfully",
+      message: emailResult.skipped
+        ? "Morning report generated. No shortlisted stocks, email skipped"
+        : "Morning report generated and sent successfully",
+      emailSent: !emailResult.skipped,
       niftyAboveEMA: niftyData.isAboveEMA,
       niftyPrice: niftyData.currentPrice,
       ema20: niftyData.ema20,

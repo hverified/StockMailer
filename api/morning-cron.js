@@ -90,8 +90,11 @@ module.exports = async (req, res) => {
     logger.info('💰 Enriching stocks with high data...');
     const enrichedStocks = await marketService.enrichStocksWithDayAndPrevHighs(stocks);
     
-    // Step 4: Send morning email report
-    await emailService.sendMorningStockReport(enrichedStocks, niftyData);
+    // Step 4: Send morning email report only when shortlisted stocks are available
+    const emailResult = await emailService.sendMorningStockReport(
+      enrichedStocks,
+      niftyData
+    );
     
     logger.info('✅ Morning cron job completed successfully');
     
@@ -104,7 +107,8 @@ module.exports = async (req, res) => {
         isAboveEMA: niftyData.isAboveEMA
       },
       stocksScraped: stocks.length,
-      stocksProcessed: enrichedStocks.length
+      stocksProcessed: enrichedStocks.length,
+      emailSent: !emailResult.skipped
     });
   } catch (error) {
     logger.error(`❌ Morning cron job failed: ${error.message}`);
