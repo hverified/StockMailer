@@ -21,14 +21,15 @@ function generate() {
 
   <body>
     <div class="container">
-      <header class="header">
-        <div class="header-top">
-          <div>
-            <h1 id="greeting"></h1>
-            <div class="date" id="dateLine"></div>
+      <header class="topbar">
+        <div class="brand">
+          <img src="/tradewise.svg" alt="Tradewise logo" class="brand-logo" />
+          <div class="brand-text">
+            <div class="brand-title">Tradewise</div>
+            <div class="brand-subtitle">Market Intelligence</div>
           </div>
-          <div id="authControls"></div>
         </div>
+        <div id="authControls"></div>
       </header>
 
       <div id="authPanel"></div>

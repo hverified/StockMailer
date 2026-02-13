@@ -1870,15 +1870,16 @@ button.active .icon-history {
 }
 
 #manualScanBtn {
-  background:linear-gradient(135deg,#1d4ed8,#2563eb,#0ea5e9);
-  color:#fff;
-  border:none;
-  box-shadow:0 10px 20px rgba(37, 99, 235, 0.24);
+  background:linear-gradient(180deg,#f2f7ff,#e8f0ff);
+  color:#1f3f75;
+  border:1px solid #ccdaf4;
+  box-shadow:0 6px 16px rgba(29, 78, 216, 0.12);
 }
 
 #manualScanBtn:hover {
-  background:linear-gradient(135deg,#1d4ed8,#2563eb,#0ea5e9);
-  color:#fff;
+  background:linear-gradient(180deg,#ecf3ff,#e1ebff);
+  color:#1f3f75;
+  border-color:#b9cdef;
 }
 
 .card,
@@ -1903,6 +1904,18 @@ button.active .icon-history {
 
 .empty-state {
   background:linear-gradient(180deg,#ffffff,#f5f9ff);
+}
+
+.actions > button .icon {
+  width:18px;
+  height:18px;
+  stroke-width:2.1;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+#manualScanBtn .icon {
+  stroke-width:2.2;
 }
 
 @media (max-width: 768px) {
@@ -1960,9 +1973,10 @@ button.active .icon-history {
   }
 
   .profile-menu {
-    right:auto;
-    left:0;
-    width:min(260px, 86vw);
+    left:auto;
+    right:0;
+    width:min(280px, calc(100vw - 24px));
+    max-width:calc(100vw - 24px);
   }
 
   .auth-user-pill {
@@ -1978,6 +1992,104 @@ button.active .icon-history {
 
   .auth-switch-btn {
     min-height:42px;
+  }
+}
+
+/* Reimagined homepage: bold fintech minimal */
+.container {
+  max-width:1200px;
+  padding:28px 24px 36px;
+}
+
+.topbar {
+  display:grid;
+  grid-template-columns:1fr auto;
+  align-items:center;
+  gap:14px;
+  margin-bottom:16px;
+  padding:12px 14px;
+  border:1px solid #d8e4f3;
+  border-radius:16px;
+  background:linear-gradient(180deg,#ffffff,#f6faff);
+  box-shadow:
+    0 1px 3px rgba(15, 23, 42, 0.05),
+    0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.brand {
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.brand-logo {
+  width:34px;
+  height:34px;
+  border-radius:10px;
+  object-fit:contain;
+  display:block;
+}
+
+.brand-title {
+  font-size:16px;
+  font-weight:800;
+  color:#0b1d3a;
+  letter-spacing:-0.01em;
+}
+
+.brand-subtitle {
+  font-size:11px;
+  font-weight:600;
+  color:#63799b;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+}
+
+.actions {
+  margin:14px 0 20px;
+  padding:8px;
+  border-radius:14px;
+}
+
+.actions > button {
+  min-height:46px;
+  border-radius:10px;
+  font-size:12.5px;
+}
+
+#content.grid {
+  gap:14px;
+}
+
+.card,
+.history-item,
+.report-wrap {
+  border-radius:14px;
+}
+
+@media (max-width: 900px) {
+  .topbar {
+    grid-template-columns:1fr auto;
+  }
+}
+
+@media (max-width: 540px) {
+  .container {
+    padding:16px 12px 24px;
+  }
+
+  .topbar {
+    padding:10px;
+    border-radius:12px;
+  }
+
+  .brand-title {
+    font-size:15px;
+  }
+
+  .actions > button {
+    flex:1 1 calc(50% - 6px);
+    min-height:44px;
   }
 }
 

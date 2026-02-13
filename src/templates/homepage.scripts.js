@@ -178,22 +178,6 @@ const iconClass = type;
   }
 };
 
-// Greeting Functions
-const greeting = {
-  set: (name = 'Trader') => {
-    const hour = new Date().getHours();
-    const greetings = {
-      morning: hour >= 5 && hour < 12 ? 'Good morning' : null,
-      afternoon: hour >= 12 && hour < 17 ? 'Good afternoon' : null,
-      evening: hour >= 17 && hour < 23 ? 'Good evening' : null
-    };
-    
-    const text = greetings.morning || greetings.afternoon || greetings.evening || 'Welcome back';
-    dom.get('greeting').innerText = text + ', ' + name;
-    dom.get('dateLine').innerText = utils.getCurrentDate();
-  }
-};
-
 // API Functions
 const api = {
   fetch: async (url, options = {}) => {
@@ -241,11 +225,6 @@ const auth = {
 
   setUser: (user) => {
     auth.user = user || null;
-    if (auth.user?.name) {
-      greeting.set(auth.user.name);
-    } else {
-      greeting.set('Trader');
-    }
   },
 
   renderControls: () => {
@@ -1140,7 +1119,6 @@ async function runManualScan() {
 
 // Initialize
 window.addEventListener('load', () => {
-  greeting.set('Trader');
   auth.bootstrap();
 });
 `;
