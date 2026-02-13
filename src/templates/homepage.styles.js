@@ -341,6 +341,70 @@ a.docs:hover {
   margin-top:6px;
 }
 
+.market-scan-layout {
+  grid-column:1 / -1;
+  display:grid;
+  grid-template-columns:320px 1fr;
+  gap:16px;
+  align-items:start;
+}
+
+.market-scan-summary .nifty-card {
+  margin:0;
+  width:100%;
+  max-width:none;
+  grid-column:auto;
+  position:sticky;
+  top:12px;
+}
+
+.market-scan-panel {
+  border:1px solid #d6e2f2;
+  border-radius:14px;
+  background:linear-gradient(180deg,#ffffff,#f7fbff);
+  padding:12px;
+}
+
+.market-scan-head {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:10px;
+  padding-bottom:10px;
+  border-bottom:1px solid #e4ebf6;
+}
+
+.market-scan-head h3 {
+  margin:0;
+  font-size:15px;
+  font-weight:700;
+  color:#0f2b56;
+}
+
+.market-scan-head span {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:26px;
+  height:26px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+  color:#1e3a8a;
+  background:#eaf1ff;
+  border:1px solid #d2e1fb;
+}
+
+.market-scan-panel .stock-grid {
+  grid-column:auto;
+  gap:12px;
+  grid-template-columns:repeat(2,minmax(220px,1fr));
+}
+
+.market-scan-panel .empty-state {
+  margin:0;
+}
+
 .history-item {
   background:linear-gradient(180deg, var(--surface) 0%, var(--surface-blue) 100%);
   border-radius:var(--radius-lg);
@@ -1515,11 +1579,13 @@ button.active .icon-history {
 
 #authPanel {
   margin:12px 0 20px;
+  display:flex;
+  justify-content:center;
 }
 
 .auth-shell {
   position:relative;
-  max-width:980px;
+  width:min(1120px, 100%);
   display:grid;
   grid-template-columns:0.95fr 1.05fr;
   gap:14px;
@@ -1870,16 +1936,16 @@ button.active .icon-history {
 }
 
 #manualScanBtn {
-  background:linear-gradient(180deg,#f2f7ff,#e8f0ff);
-  color:#1f3f75;
-  border:1px solid #ccdaf4;
-  box-shadow:0 6px 16px rgba(29, 78, 216, 0.12);
+  background:var(--surface-soft);
+  color:var(--text-soft);
+  border:1px solid var(--border);
+  box-shadow:none;
 }
 
 #manualScanBtn:hover {
-  background:linear-gradient(180deg,#ecf3ff,#e1ebff);
-  color:#1f3f75;
-  border-color:#b9cdef;
+  background:var(--surface-alt);
+  color:var(--text-soft);
+  border-color:var(--border-strong);
 }
 
 .card,
@@ -1919,6 +1985,22 @@ button.active .icon-history {
 }
 
 @media (max-width: 768px) {
+  .market-scan-layout {
+    grid-template-columns:1fr;
+  }
+
+  .market-scan-summary .nifty-card {
+    position:static;
+  }
+
+  .market-scan-panel .stock-grid {
+    grid-template-columns:1fr;
+  }
+
+  #authPanel {
+    justify-content:stretch;
+  }
+
   .auth-shell {
     grid-template-columns:1fr;
     gap:10px;

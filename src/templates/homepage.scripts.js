@@ -113,6 +113,16 @@ const dom = {
     const content = dom.get('content');
     if (actions) actions.style.display = '';
     if (content) content.style.display = '';
+  },
+
+  showTopbar: () => {
+    const topbar = dom.get('topbar');
+    if (topbar) topbar.style.display = '';
+  },
+
+  hideTopbar: () => {
+    const topbar = dom.get('topbar');
+    if (topbar) topbar.style.display = 'none';
   }
 };
 
@@ -289,11 +299,13 @@ const auth = {
     if (auth.user) {
       panel.innerHTML = '';
       panel.style.display = 'none';
+      dom.showTopbar();
       dom.showMainSections();
       return;
     }
 
     panel.style.display = '';
+    dom.hideTopbar();
     dom.hideMainSections();
 
     const isSignin = mode === 'signin';
@@ -348,6 +360,7 @@ const auth = {
     if (!panel) return;
 
     panel.style.display = '';
+    dom.hideTopbar();
     dom.hideMainSections();
 
     panel.innerHTML = \`
@@ -703,27 +716,45 @@ async function loadMarketScan() {
     const niftyResponse = await api.get('/nifty-status');
     const scanData = await api.get('/test-scrape');
     
-    dom.setContent('');
-
     // Always show Nifty card
     const nifty = {
       price: niftyResponse.price,
       ema20: niftyResponse.ema20,
       aboveEMA: niftyResponse.aboveEMA
     };
-    dom.addContent(components.niftyCard(nifty));
+    const niftyHtml = components.niftyCard(nifty);
 
     // Show stocks if available, otherwise show empty state
+    let stocksSectionHtml = '';
     if (scanData.stocks && scanData.stocks.length > 0) {
       const stocksHtml = scanData.stocks.map(components.stockCard).join('');
-      dom.addContent('<div class="stock-grid">' + stocksHtml + '</div>');
+      stocksSectionHtml = \`
+        <div class="market-scan-panel">
+          <div class="market-scan-head">
+            <h3>Shortlisted Stocks</h3>
+            <span>\${scanData.stocks.length}</span>
+          </div>
+          <div class="stock-grid">\${stocksHtml}</div>
+        </div>
+      \`;
     } else {
-      dom.addContent(components.emptyState(
-        '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>',
-        'No Stocks Shortlisted',
-        'No stocks meet the criteria at this time.'
-      ));
+      stocksSectionHtml = \`
+        <div class="market-scan-panel">
+          \${components.emptyState(
+            '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>',
+            'No Stocks Shortlisted',
+            'No stocks meet the criteria at this time.'
+          )}
+        </div>
+      \`;
     }
+
+    dom.setContent(\`
+      <div class="market-scan-layout">
+        <div class="market-scan-summary">\${niftyHtml}</div>
+        \${stocksSectionHtml}
+      </div>
+    \`);
   } catch (error) {
     console.error('Error loading market scan:', error);
     dom.setContent(components.emptyState(

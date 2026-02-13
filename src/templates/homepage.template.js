@@ -21,7 +21,7 @@ function generate() {
 
   <body>
     <div class="container">
-      <header class="topbar">
+      <header id="topbar" class="topbar">
         <div class="brand">
           <img src="/tradewise.svg" alt="Tradewise logo" class="brand-logo" />
           <div class="brand-text">
