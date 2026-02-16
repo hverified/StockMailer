@@ -1,0 +1,18 @@
+{
+  "name": "Tradewise",
+  "short_name": "Tradewise",
+  "description": "Stock screening and market intelligence dashboard",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f3f7fb",
+  "theme_color": "#0f5fa8",
+  "icons": [
+    {
+      "src": "/tradewise.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

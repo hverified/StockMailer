@@ -6,12 +6,16 @@ class MongoDB {
   constructor() {
     this.client = null;
     this.db = null;
+    this.connectPromise = null;
   }
 
   async connect() {
     try {
-      if (this.client) {
+      if (this.db) {
         return this.db;
+      }
+      if (this.connectPromise) {
+        return await this.connectPromise;
       }
 
       const uri = process.env.MONGODB_URI;
@@ -19,21 +23,38 @@ class MongoDB {
         throw new Error('MONGODB_URI environment variable is not set');
       }
 
-      this.client = new MongoClient(uri, {
-        maxPoolSize: 10,
-        minPoolSize: 2,
-        maxIdleTimeMS: 30000
-      });
+      this.connectPromise = (async () => {
+        if (!this.client) {
+          this.client = new MongoClient(uri, {
+            maxPoolSize: 10,
+            minPoolSize: 2,
+            maxIdleTimeMS: 30000
+          });
+        }
 
-      await this.client.connect();
-      this.db = this.client.db(process.env.MONGODB_DB_NAME || 'stockmailer');
-      
-      // Create indexes
-      await this.createIndexes();
-      
-      logger.info('✅ MongoDB connected successfully');
-      return this.db;
+        await this.client.connect();
+        this.db = this.client.db(process.env.MONGODB_DB_NAME || 'stockmailer');
+
+        // Create indexes
+        await this.createIndexes();
+
+        logger.info('✅ MongoDB connected successfully');
+        return this.db;
+      })();
+
+      const db = await this.connectPromise;
+      this.connectPromise = null;
+      return db;
     } catch (error) {
+      this.connectPromise = null;
+      if (!this.db && this.client) {
+        try {
+          await this.client.close();
+        } catch {
+          // ignore close errors after failed connect
+        }
+        this.client = null;
+      }
       logger.error(`MongoDB connection error: ${error.message}`);
       throw error;
     }
@@ -65,6 +86,7 @@ class MongoDB {
   }
 
   async disconnect() {
+    this.connectPromise = null;
     if (this.client) {
       await this.client.close();
       this.client = null;
